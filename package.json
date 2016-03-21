@@ -1,0 +1,19 @@
+{
+  "name": "chess.js",
+  "version": "1.0.0",
+  "description": "Simple chess server",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "keywords": [
+    "chess"
+  ],
+  "author": "Douman",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.13.4",
+    "pug": "^2.0.0-alpha1",
+    "socket.io": "^1.4.5"
+  }
+}
