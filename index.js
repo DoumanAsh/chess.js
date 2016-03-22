@@ -14,6 +14,10 @@ app.get('/', function (req, res) {
     });
 });
 
+app.get('/chess_board', function (req, res) {
+    res.render("chess_board");
+});
+
 http.listen(PORT, function () {
     console.log('Start chess.js on port ' + PORT);
 });

@@ -1,0 +1,19 @@
+include ./head.pug
+
+script(src="/js/main.js")
+
+body()
+    div(class="chess_board")
+        - for (var i = 8; i > 0; i--)
+            if i % 2
+                - var cell = "white"
+            else
+                - var cell = "black"
+            each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
+                div(id=col+i, class=cell)
+                if cell === "white"
+                    - cell = "black"
+                else
+                    - cell = "white"
+    script.
+        chess_init()

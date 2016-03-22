@@ -1,3 +1,4 @@
+/* Common */
 * {
     margin: 0;
     padding: 0;
@@ -7,4 +8,76 @@ body {
     font: 16px Helvetica, Sans-Serif;
     line-height: 24px;
     background: url(img/noise.jpg);
+}
+
+/* Chess board part */
+.chess_board {
+    width: 640px;
+    height: 640px;
+    margin: 25px;
+    border: 25px solid #333;
+}
+
+.chess_board div {
+    width: 80px;
+    height: 80px;
+    display: table-cell;
+    float: left;
+    background-size: contain;
+}
+
+.white {
+     background-color: #fff;
+}
+
+.black_pawn {
+    background-image: url("/img/pawn_black.png");
+}
+
+.black_rook {
+    background-image: url("/img/rook_black.png");
+}
+
+.black_bishop {
+    background-image: url("/img/bishop_black.png");
+}
+
+.black_knight {
+    background-image: url("/img/knight_black.png");
+}
+
+.black_queen {
+    background-image: url("/img/queen_black.png");
+}
+
+.black_king {
+    background-image: url("/img/king_black.png");
+}
+
+.white_pawn {
+    background-image: url("/img/pawn_white.png");
+}
+
+.white_rook {
+    background-image: url("/img/rook_white.png");
+}
+
+.white_bishop {
+    background-image: url("/img/bishop_white.png");
+}
+
+.white_knight {
+    background-image: url("/img/knight_white.png");
+}
+
+.white_queen {
+    background-image: url("/img/queen_white.png");
+}
+
+.white_king {
+    background-image: url("/img/king_white.png");
+}
+
+.black {
+     background-color: #999;
 }
