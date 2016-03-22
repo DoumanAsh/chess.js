@@ -30,6 +30,10 @@ body {
      background-color: #fff;
 }
 
+.black {
+     background-color: #999;
+}
+
 .black_pawn {
     background-image: url("/img/pawn_black.png");
 }
@@ -76,8 +80,4 @@ body {
 
 .white_king {
     background-image: url("/img/king_white.png");
-}
-
-.black {
-     background-color: #999;
 }

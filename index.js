@@ -14,6 +14,10 @@ app.get('/', function (req, res) {
     });
 });
 
+app.get('/chess', function (req, res) {
+    res.render("chess");
+});
+
 app.get('/chess_board', function (req, res) {
     res.render("chess_board");
 });

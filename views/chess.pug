@@ -1,0 +1,10 @@
+include ./head.pug
+
+script(src="/js/chess.js")
+link(rel='stylesheet', href='/chess.css', type='text/css')
+
+body
+    canvas(id="chess_board", width="480px", height="480px")= "Your browser does not support html5 canvas? Go and upgrade it already!"
+
+    script.
+        chess_init()
