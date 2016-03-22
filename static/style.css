@@ -26,12 +26,16 @@ body {
     background-size: contain;
 }
 
-.white {
+.chess_board .white {
      background-color: #fff;
 }
 
-.black {
+.chess_board .black {
      background-color: #999;
+}
+
+.chess_board .selected {
+     background-color: #33CC00;
 }
 
 .black_pawn {
