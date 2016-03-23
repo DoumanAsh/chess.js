@@ -1,6 +1,9 @@
 var BOARD;
 var PLAYER_TEAM = TEAM.white;
 
+/**
+ * Column/letter decrease by one
+ */
 function col_decrease(col) {
     var map = {
         a: undefined,
@@ -16,6 +19,9 @@ function col_decrease(col) {
     return map[col];
 }
 
+/**
+ * Column/letter increase by one
+ */
 function col_increase(col) {
     var map = {
         a: "b",
@@ -30,6 +36,10 @@ function col_increase(col) {
 
     return map[col];
 }
+
+/**
+ * Chess board click callback.
+ */
 function click() {
     if (BOARD.selected) {
         selected_click(this.id);
@@ -40,6 +50,9 @@ function click() {
 
 }
 
+/**
+ * Chess board click handler when figure has been selected.
+ */
 function selected_click(id) {
     var block = BOARD[id];
 
@@ -56,6 +69,9 @@ function selected_click(id) {
     }
 }
 
+/**
+ * Chess board click handler when figure has NOT been selected.
+ */
 function not_selected_click(id) {
     var block = BOARD[id];
 
@@ -66,7 +82,14 @@ function not_selected_click(id) {
     BOARD.select(id);
 }
 
+/**
+ * Chess board class
+ */
 function ChessBoard() {
+    /**
+     * Function iterator over board.
+     * Requires functor: func(me: reference to board, id: "<col><row>")
+     */
     this.iterate = function(functor) {
         for (var col of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
             for (var i = 1; i < 9; i++) {
@@ -78,6 +101,7 @@ function ChessBoard() {
     this.selected = undefined;
     this.selected_move_area = [];
 
+    //Initialize board
     this.iterate(function(me, id) {
         me[id] = {
             div: document.getElementById(id),
@@ -87,6 +111,11 @@ function ChessBoard() {
         me[id].div.onclick=click;
     });
 
+    /**
+     * Resets element/board to initial values(empty).
+     *
+     * @param id Specify if only specific element requires reset. Optional
+     */
     this.reset = function(id) {
         if (id) {
             var block = this[id];
@@ -103,6 +132,11 @@ function ChessBoard() {
         }
     };
 
+    /**
+     * Selects element on board.
+     *
+     * @param id Id of board's element.
+     */
     this.select = function(id) {
         var block = BOARD[id];
         block.div.className += " selected";
@@ -110,6 +144,9 @@ function ChessBoard() {
         this.set_avail_area();
     };
 
+    /**
+     * Unselect currently selected element.
+     */
     this.unselect = function() {
         if (this.selected) {
             this.selected = undefined;
@@ -121,6 +158,11 @@ function ChessBoard() {
         }
     };
 
+    /**
+     * Check if enemy king has been checked after move.
+     *
+     * @param moved_to Location where piece has been moved
+     */
     this.is_check = function(moved_to) {
         var move_area = this.get_avail_area();
         for (var idx = 0; idx < move_area.length; idx++) {
@@ -133,6 +175,14 @@ function ChessBoard() {
         }
     };
 
+    /**
+     * @brief Moves piece to new location.
+     *
+     * Clear selection and checks for enemy king being checked
+     * by this move.
+     *
+     * @param to New location.
+     */
     this.move = function(to) {
         var old_pos = this[this.selected];
         var new_pos = this[to];
@@ -148,10 +198,18 @@ function ChessBoard() {
         this.selected = undefined;
     };
 
+    /**
+     * Store available area for move of currently selected piece.
+     */
     this.set_avail_area = function() {
         this.selected_move_area = this.get_avail_area();
     };
 
+    /**
+     * Returns array of possible moves of currently selected piece.
+     *
+     * @TODO Add parameter?
+     */
     this.get_avail_area = function() {
         var result = [];
         var col = this.selected[0];
@@ -205,7 +263,12 @@ function ChessBoard() {
     };
 }
 
-///Sets initial pieces at default positions
+/**
+ * @brief Sets initial pieces at default positions.
+ *
+ * Must be called once.
+ * To reset board use chess_reset function.
+ */
 function chess_init() {
     if (BOARD === undefined) {
         BOARD = new ChessBoard();
@@ -244,7 +307,9 @@ function chess_init() {
     }
 }
 
-///Cleans game and initiate anew.
+/**
+ * Cleans game and initialize board anew.
+ */
 function reset() {
     BOARD.reset();
     chess_init();
