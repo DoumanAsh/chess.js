@@ -1,6 +1,35 @@
 var BOARD;
 var PLAYER_TEAM = TEAM.white;
 
+function col_decrease(col) {
+    var map = {
+        a: undefined,
+        b: "a",
+        c: "b",
+        d: "c",
+        e: "d",
+        f: "e",
+        g: "f",
+        h: "g"
+    };
+
+    return map[col];
+}
+
+function col_increase(col) {
+    var map = {
+        a: "b",
+        b: "c",
+        c: "d",
+        d: "e",
+        e: "f",
+        f: "g",
+        g: "h",
+        h: undefined
+    };
+
+    return map[col];
+}
 function click() {
     if (BOARD.selected) {
         selected_click(this.id);
@@ -16,16 +45,14 @@ function selected_click(id) {
 
     if (block.team == PLAYER_TEAM) {
         BOARD.unselect();
-        block.div.className += " selected";
-        BOARD.selected = id;
+        BOARD.select(id);
         return;
     }
 
-    var avail_area = BOARD.get_avail_area();
-    var move_to = avail_area.indexOf(id);
+    var move_to = BOARD.selected_move_area.indexOf(id);
 
     if (move_to != -1) {
-        BOARD.move(avail_area[move_to]);
+        BOARD.move(BOARD.selected_move_area[move_to]);
     }
 }
 
@@ -36,8 +63,7 @@ function not_selected_click(id) {
         return;
     }
 
-    block.div.className += " selected";
-    BOARD.selected = id;
+    BOARD.select(id);
 }
 
 function ChessBoard() {
@@ -50,6 +76,7 @@ function ChessBoard() {
     };
 
     this.selected = undefined;
+    this.selected_move_area = [];
 
     this.iterate(function(me, id) {
         me[id] = {
@@ -65,8 +92,9 @@ function ChessBoard() {
             var block = this[id];
             block.team = TEAM.none;
             block.piece = PIECES.none;
-            block.div.className = block.div.className.replace(/((black)|(white))_[^ ]+/, "");
-            block.div.className = block.div.className.replace("selected", "");
+            block.div.className = block.div.className
+                                           .replace(/((black)|(white))_[^ ]+/, "")
+                                           .replace("selected", "");
         }
         else {
             this.iterate(function(me, id) {
@@ -75,9 +103,17 @@ function ChessBoard() {
         }
     };
 
+    this.select = function(id) {
+        var block = BOARD[id];
+        block.div.className += " selected";
+        this.selected = id;
+        this.get_avail_area();
+    };
+
     this.unselect = function() {
         if (this.selected) {
             this.selected = undefined;
+            this.selected_move_area.length = 0;
             this.iterate(function(me, id) {
                 var block = me[id].div;
                 block.className = block.className.replace("selected", "");
@@ -92,10 +128,12 @@ function ChessBoard() {
 
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
-        new_pos.div.className += " " + old_pos.div.className.split(" ")[1];
+        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "")
+                                + " "
+                                + old_pos.div.className.split(/\s+/)[1];
         this.reset(this.selected);
         this.selected = undefined;
-    }
+    };
 
     this.get_avail_area = function() {
         var result = [];
@@ -104,19 +142,26 @@ function ChessBoard() {
         var cur = this[this.selected];
 
         if (cur.piece === PIECES.pawn) {
+            var new_row;
             var move;
+            var eat_left;
+            var eat_right;
             if (cur.team === TEAM.white) {
-                move = col + (row + 1);
+                new_row = row + 1;
             }
             else {
-                move = col + (row - 1);
+                new_row = row - 1;
             }
 
+            move = col + new_row;
+            eat_left = col_decrease(col) + new_row;
+            eat_right = col_increase(col) + new_row;
+
             if (this[move].team === TEAM.none) {
-                result.push(move)
+                result.push(move);
                 //First move can be for 2 cells
                 //See def.js for logic
-                if ((cur.team - row) == 0) {
+                if ((cur.team - row) === 0) {
                     if (cur.team === TEAM.white) {
                         move = col + (row + 2);
                     }
@@ -124,13 +169,22 @@ function ChessBoard() {
                         move = col + (row - 2);
                     }
                     if (this[move].team === TEAM.none) {
-                        result.push(move)
+                        result.push(move);
                     }
                 }
             }
+
+            //Check if can eat
+            if (eat_left && (this[eat_left].team === TEAM.black)) {
+                result.push(eat_left);
+            }
+
+            if (eat_right && (this[eat_right].team === TEAM.black)) {
+                result.push(eat_right);
+            }
         }
 
-        return result;
+        this.selected_move_area = result;
     };
 }
 
@@ -149,7 +203,7 @@ function chess_init() {
         f: ["bishop", PIECES.bishop],
         g: ["knight", PIECES.knight],
         h: ["rook", PIECES.rook]
-    }
+    };
 
     for (var col of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
         //black
@@ -157,7 +211,7 @@ function chess_init() {
         var col7 = col + 7;
         BOARD[col8].div.className += " black_" + figure_map[col][0];
         BOARD[col8].team = TEAM.black;
-        BOARD[col8].piece = figure_map[col][1]
+        BOARD[col8].piece = figure_map[col][1];
         BOARD[col7].div.className += " black_pawn";
         BOARD[col7].team = TEAM.black;
         BOARD[col7].piece = PIECES.pawn;
@@ -166,7 +220,7 @@ function chess_init() {
         var col2 = col + 2;
         BOARD[col1].div.className += " white_" + figure_map[col][0];
         BOARD[col1].team = TEAM.white;
-        BOARD[col1].piece = figure_map[col][1]
+        BOARD[col1].piece = figure_map[col][1];
         BOARD[col2].div.className += " white_pawn";
         BOARD[col2].team = TEAM.white;
         BOARD[col2].piece = PIECES.pawn;
