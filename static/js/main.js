@@ -107,7 +107,7 @@ function ChessBoard() {
         var block = BOARD[id];
         block.div.className += " selected";
         this.selected = id;
-        this.get_avail_area();
+        this.set_avail_area();
     };
 
     this.unselect = function() {
@@ -121,8 +121,19 @@ function ChessBoard() {
         }
     };
 
+    this.is_check = function(moved_to) {
+        var move_area = this.get_avail_area();
+        for (var idx = 0; idx < move_area.length; idx++) {
+            var block = BOARD[move_area[idx]];
+            if (block.piece === PIECES.king) {
+                block.div.className = block.div.className + " checked";
+                //TODO event check
+                break;
+            }
+        }
+    };
+
     this.move = function(to) {
-        console.log(to);
         var old_pos = this[this.selected];
         var new_pos = this[to];
 
@@ -132,7 +143,13 @@ function ChessBoard() {
                                 + " "
                                 + old_pos.div.className.split(/\s+/)[1];
         this.reset(this.selected);
+        this.selected = to;
+        this.is_check();
         this.selected = undefined;
+    };
+
+    this.set_avail_area = function() {
+        this.selected_move_area = this.get_avail_area();
     };
 
     this.get_avail_area = function() {
@@ -184,7 +201,7 @@ function ChessBoard() {
             }
         }
 
-        this.selected_move_area = result;
+        return result;
     };
 }
 

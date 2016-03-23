@@ -38,6 +38,10 @@ body {
      background-color: #33CC00;
 }
 
+.chess_board .checked {
+     background-color: #F80000;
+}
+
 .black_pawn {
     background-image: url("/img/pawn_black.png");
 }
