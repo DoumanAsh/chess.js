@@ -302,6 +302,95 @@ function ChessBoard() {
     };
 
     /**
+     * Returns array of possible moves for bishop.
+     */
+    this.get_avail_area_bishop = function(col, row, cur) {
+        var result = [];
+
+        var me = this;
+        //Checks move and returns [is_break; is_to_add]
+        function is_ok(move) {
+            var result = [false, false];
+            if (me[move].team === TEAM.none) {
+                result[1] = true;
+            }
+            else if (me.is_enemy_team(move)) {
+                result[1] = true;
+                result[0] = true;
+            }
+            else {
+                result[0] = true;
+            }
+
+            return result;
+        }
+
+        var move, move_check;
+        var idx = row - 1;
+        var col_idx = col_decrease(col);
+        for (;
+             idx > 0 && col_idx !== undefined;
+             col_idx = col_decrease(col_idx)) {
+
+             move = col_idx + idx;
+             move_check = is_ok(move);
+
+             if (move_check[1]) result.push(move);
+             if (move_check[0]) break;
+
+             idx--;
+        }
+
+        idx = row + 1;
+        col_idx = col_decrease(col);
+        for (;
+             idx < 9 && col_idx !== undefined;
+             col_idx = col_decrease(col_idx)) {
+
+             move = col_idx + idx;
+             move_check = is_ok(move);
+
+             if (move_check[1]) result.push(move);
+             if (move_check[0]) break;
+
+             idx++;
+        }
+
+        idx = row - 1;
+        col_idx = col_increase(col);
+        for (;
+             idx > 0 && col_idx !== undefined;
+             col_idx = col_increase(col_idx)) {
+
+             move = col_idx + idx;
+             move_check = is_ok(move);
+
+             if (move_check[1]) result.push(move);
+             if (move_check[0]) break;
+
+             idx--;
+        }
+
+        idx = row + 1;
+        col_idx = col_increase(col);
+        for (;
+             idx < 9 && col_idx !== undefined;
+             col_idx = col_increase(col_idx)) {
+
+             move = col_idx + idx;
+             move_check = is_ok(move);
+
+             if (move_check[1]) result.push(move);
+             if (move_check[0]) break;
+
+             idx++;
+        }
+
+        return result;
+
+    };
+
+    /**
      * Returns array of possible moves of currently selected piece.
      *
      * @TODO Add parameter?
@@ -318,6 +407,9 @@ function ChessBoard() {
                 break;
             case PIECES.knight:
                 result = this.get_avail_area_knight(col, row, cur);
+                break;
+            case PIECES.bishop:
+                result = this.get_avail_area_bishop(col, row, cur);
                 break;
         }
 
