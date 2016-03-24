@@ -4,7 +4,7 @@ var PLAYER_TEAM = TEAM.white;
 /**
  * Column/letter decrease by one
  */
-function col_decrease(col) {
+function col_decrease(col, times) {
     var map = {
         a: undefined,
         b: "a",
@@ -16,13 +16,21 @@ function col_decrease(col) {
         h: "g"
     };
 
-    return map[col];
+    if (times) {
+        for (var i = 0; i < times; i++) {
+            col = map[col];
+        }
+        return col;
+    }
+    else {
+        return map[col];
+    }
 }
 
 /**
  * Column/letter increase by one
  */
-function col_increase(col) {
+function col_increase(col, times) {
     var map = {
         a: "b",
         b: "c",
@@ -34,7 +42,15 @@ function col_increase(col) {
         h: undefined
     };
 
-    return map[col];
+    if (times) {
+        for (var i = 0; i < times; i++) {
+            col = map[col];
+        }
+        return col;
+    }
+    else {
+        return map[col];
+    }
 }
 
 /**
@@ -167,7 +183,7 @@ function ChessBoard() {
         var move_area = this.get_avail_area();
         for (var idx = 0; idx < move_area.length; idx++) {
             var block = BOARD[move_area[idx]];
-            if (block.piece === PIECES.king) {
+            if (block.piece === PIECES.king && block.team !== PLAYER_TEAM) {
                 block.div.className = block.div.className + " checked";
                 //TODO event check
                 break;
@@ -189,9 +205,7 @@ function ChessBoard() {
 
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
-        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "")
-                                + " "
-                                + old_pos.div.className.split(/\s+/)[1];
+        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
         this.reset(this.selected);
         this.selected = to;
         this.is_check();
@@ -256,6 +270,28 @@ function ChessBoard() {
 
             if (eat_right && (this[eat_right].team === TEAM.black)) {
                 result.push(eat_right);
+            }
+        }
+        else if (cur.piece === PIECES.knight) {
+            var moves = [
+                [col_decrease(col, 2), [row+1, row-1]],
+                [col_decrease(col), [row+2, row-2]],
+                [col_increase(col), [row+2, row-2]],
+                [col_increase(col, 2), [row+1, row-1]]
+            ];
+
+            for (var idx = 0; idx < moves.length; idx++) {
+                var new_col = moves[idx][0];
+                var new_rows = moves[idx][1];
+
+                if (new_col) {
+                    for (var jdx = 0; jdx < new_rows.length; jdx++) {
+                        if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
+                            var new_move = new_col + new_rows[jdx];
+                            if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
+                        }
+                    }
+                }
             }
         }
 
