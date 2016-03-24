@@ -107,11 +107,9 @@ function ChessBoard() {
      * Requires functor: func(me: reference to board, id: "<col><row>")
      */
     this.iterate = function(functor) {
-        for (var col of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
-            for (var i = 1; i < 9; i++) {
-                functor(this, col+i);
-            }
-        }
+        ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
+            for (var i = 1; i < 9; i++) functor(this, col+i);
+        }, this);
     };
 
     this.selected = undefined;
@@ -220,6 +218,90 @@ function ChessBoard() {
     };
 
     /**
+     * Checks if location on board belongs to enemy team.
+     */
+    this.is_enemy_team = function(loc) {
+        return Math.abs(this[loc].team - PLAYER_TEAM) === 5;
+    };
+
+    /**
+     * Returns array of possible moves for pawn.
+     */
+    this.get_avail_area_pawn = function(col, row, cur) {
+        var result = [];
+        var new_row;
+
+        if (cur.team === TEAM.white) {
+            new_row = row + 1;
+        }
+        else {
+            new_row = row - 1;
+        }
+
+        var move = col + new_row;
+        var eat_left = col_decrease(col) + new_row;
+        var eat_right = col_increase(col) + new_row;
+
+        if (this[move].team === TEAM.none) {
+            result.push(move);
+            //First move can be for 2 cells
+            //See def.js for logic
+            if ((cur.team - row) === 0) {
+                if (cur.team === TEAM.white) {
+                    move = col + (row + 2);
+                }
+                else {
+                    move = col + (row - 2);
+                }
+
+                if (this[move].team === TEAM.none) result.push(move);
+            }
+        }
+
+        //Check if can eat
+        //See def.js for logic
+        if (eat_left && this.is_enemy_team(eat_left)) {
+            result.push(eat_left);
+        }
+
+        if (eat_right && this.is_enemy_team(eat_right)) {
+            result.push(eat_right);
+        }
+
+        return result;
+    };
+
+    /**
+     * Returns array of possible moves for knight.
+     */
+    this.get_avail_area_knight = function(col, row, cur) {
+        var result = [];
+
+        var moves = [
+            [col_decrease(col, 2), [row+1, row-1]],
+            [col_decrease(col), [row+2, row-2]],
+            [col_increase(col), [row+2, row-2]],
+            [col_increase(col, 2), [row+1, row-1]]
+        ];
+
+        for (var idx = 0; idx < moves.length; idx++) {
+            var new_col = moves[idx][0];
+            var new_rows = moves[idx][1];
+
+            if (new_col) {
+                for (var jdx = 0; jdx < new_rows.length; jdx++) {
+                    if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
+                        var new_move = new_col + new_rows[jdx];
+                        if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
+    /**
      * Returns array of possible moves of currently selected piece.
      *
      * @TODO Add parameter?
@@ -230,69 +312,13 @@ function ChessBoard() {
         var row = parseInt(this.selected[1]);
         var cur = this[this.selected];
 
-        if (cur.piece === PIECES.pawn) {
-            var new_row;
-            var move;
-            var eat_left;
-            var eat_right;
-            if (cur.team === TEAM.white) {
-                new_row = row + 1;
-            }
-            else {
-                new_row = row - 1;
-            }
-
-            move = col + new_row;
-            eat_left = col_decrease(col) + new_row;
-            eat_right = col_increase(col) + new_row;
-
-            if (this[move].team === TEAM.none) {
-                result.push(move);
-                //First move can be for 2 cells
-                //See def.js for logic
-                if ((cur.team - row) === 0) {
-                    if (cur.team === TEAM.white) {
-                        move = col + (row + 2);
-                    }
-                    else {
-                        move = col + (row - 2);
-                    }
-                    if (this[move].team === TEAM.none) {
-                        result.push(move);
-                    }
-                }
-            }
-
-            //Check if can eat
-            if (eat_left && (this[eat_left].team === TEAM.black)) {
-                result.push(eat_left);
-            }
-
-            if (eat_right && (this[eat_right].team === TEAM.black)) {
-                result.push(eat_right);
-            }
-        }
-        else if (cur.piece === PIECES.knight) {
-            var moves = [
-                [col_decrease(col, 2), [row+1, row-1]],
-                [col_decrease(col), [row+2, row-2]],
-                [col_increase(col), [row+2, row-2]],
-                [col_increase(col, 2), [row+1, row-1]]
-            ];
-
-            for (var idx = 0; idx < moves.length; idx++) {
-                var new_col = moves[idx][0];
-                var new_rows = moves[idx][1];
-
-                if (new_col) {
-                    for (var jdx = 0; jdx < new_rows.length; jdx++) {
-                        if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
-                            var new_move = new_col + new_rows[jdx];
-                            if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
-                        }
-                    }
-                }
-            }
+        switch (cur.piece) {
+            case PIECES.pawn:
+                result = this.get_avail_area_pawn(col, row, cur);
+                break;
+            case PIECES.knight:
+                result = this.get_avail_area_knight(col, row, cur);
+                break;
         }
 
         return result;
@@ -321,7 +347,7 @@ function chess_init() {
         h: ["rook", PIECES.rook]
     };
 
-    for (var col of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
+    ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
         //black
         var col8 = col + 8;
         var col7 = col + 7;
@@ -340,7 +366,7 @@ function chess_init() {
         BOARD[col2].div.className += " white_pawn";
         BOARD[col2].team = TEAM.white;
         BOARD[col2].piece = PIECES.pawn;
-    }
+    });
 }
 
 /**
