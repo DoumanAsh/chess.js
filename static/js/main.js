@@ -435,6 +435,32 @@ function ChessBoard() {
     }
 
     /**
+     * Returns array of possible moves for king.
+     */
+    this.get_avail_area_king = function(col, row, cur) {
+        var col_left = col_decrease(col);
+        var col_right = col_increase(col);
+        var row_up = row + 1;
+        var row_down = row - 1;
+        var possible_moves = [[col_left, row_up], [col, row_up], [col_right, row_up],
+                              [col_left, row], [col_right, row],
+                              [col_left, row_down], [col, row_down], [col_right, row_down]];
+
+        return possible_moves.filter(function(val) {
+            var col = val[0];
+            var row = val[1];
+
+            if (col === undefined || row < 1 || row > 8) return false;
+
+            return this.board_is_move_ok(col+row)[1];
+        }, this).map(function(val) {
+            return val[0] + val[1];
+        });
+
+
+    }
+
+    /**
      * Returns array of possible moves of currently selected piece.
      *
      * @TODO Add parameter?
@@ -461,6 +487,9 @@ function ChessBoard() {
             case PIECES.queen:
                 result = this.get_avail_area_bishop(col, row, cur);
                 result = result.concat(this.get_avail_area_rook(col, row, cur));
+                break;
+            case PIECES.king:
+                result = this.get_avail_area_king(col, row, cur);
                 break;
         }
 
