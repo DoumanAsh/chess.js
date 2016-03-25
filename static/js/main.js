@@ -302,93 +302,137 @@ function ChessBoard() {
     };
 
     /**
+     * Checks if it is possible to move in loops
+     *
+     * @returns [is_break; is_to_add]
+     */
+    this.board_is_move_ok = function(move) {
+        var result = [false, false];
+        if (this[move].team === TEAM.none) {
+            result[1] = true;
+        }
+        else if (this.is_enemy_team(move)) {
+            result[1] = true;
+            result[0] = true;
+        }
+        else {
+            result[0] = true;
+        }
+
+        return result;
+    }
+    /**
      * Returns array of possible moves for bishop.
      */
     this.get_avail_area_bishop = function(col, row, cur) {
         var result = [];
 
-        var me = this;
-        //Checks move and returns [is_break; is_to_add]
-        function is_ok(move) {
-            var result = [false, false];
-            if (me[move].team === TEAM.none) {
-                result[1] = true;
-            }
-            else if (me.is_enemy_team(move)) {
-                result[1] = true;
-                result[0] = true;
-            }
-            else {
-                result[0] = true;
-            }
-
-            return result;
-        }
-
         var move, move_check;
         var idx = row - 1;
         var col_idx = col_decrease(col);
         for (;
-             idx > 0 && col_idx !== undefined;
-             col_idx = col_decrease(col_idx)) {
+            idx > 0 && col_idx !== undefined;
+            col_idx = col_decrease(col_idx)) {
 
-             move = col_idx + idx;
-             move_check = is_ok(move);
+            move = col_idx + idx;
+            move_check = this.board_is_move_ok(move);
 
-             if (move_check[1]) result.push(move);
-             if (move_check[0]) break;
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
 
-             idx--;
+            idx--;
         }
 
         idx = row + 1;
         col_idx = col_decrease(col);
         for (;
-             idx < 9 && col_idx !== undefined;
-             col_idx = col_decrease(col_idx)) {
+            idx < 9 && col_idx !== undefined;
+            col_idx = col_decrease(col_idx)) {
 
-             move = col_idx + idx;
-             move_check = is_ok(move);
+            move = col_idx + idx;
+            move_check = this.board_is_move_ok(move);
 
-             if (move_check[1]) result.push(move);
-             if (move_check[0]) break;
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
 
-             idx++;
+            idx++;
         }
 
         idx = row - 1;
         col_idx = col_increase(col);
         for (;
-             idx > 0 && col_idx !== undefined;
-             col_idx = col_increase(col_idx)) {
+            idx > 0 && col_idx !== undefined;
+            col_idx = col_increase(col_idx)) {
 
-             move = col_idx + idx;
-             move_check = is_ok(move);
+            move = col_idx + idx;
+            move_check = this.board_is_move_ok(move);
 
-             if (move_check[1]) result.push(move);
-             if (move_check[0]) break;
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
 
-             idx--;
+            idx--;
         }
 
         idx = row + 1;
         col_idx = col_increase(col);
         for (;
-             idx < 9 && col_idx !== undefined;
-             col_idx = col_increase(col_idx)) {
+            idx < 9 && col_idx !== undefined;
+            col_idx = col_increase(col_idx)) {
 
-             move = col_idx + idx;
-             move_check = is_ok(move);
+            move = col_idx + idx;
+            move_check = this.board_is_move_ok(move);
 
-             if (move_check[1]) result.push(move);
-             if (move_check[0]) break;
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
 
-             idx++;
+            idx++;
         }
 
         return result;
 
     };
+
+    /**
+     * Returns array of possible moves for rook.
+     */
+    this.get_avail_area_rook = function(col, row, cur) {
+        var result = [];
+        var move, move_check;
+
+        for (var idx_down = row - 1; idx_down > 0; idx_down--) {
+            move = col + idx_down;
+            move_check = this.board_is_move_ok(move);
+
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
+        }
+
+        for (var idx_up = row + 1; idx_up < 9; idx_up++) {
+            move = col + idx_up;
+            move_check = this.board_is_move_ok(move);
+
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
+        }
+
+        for (var col_left = col_decrease(col); col_left !== undefined; col_left = col_decrease(col_left)) {
+            move = col_left + row
+            move_check = this.board_is_move_ok(move);
+
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
+        }
+
+        for (var col_right = col_increase(col); col_right !== undefined; col_right = col_increase(col_right)) {
+            move = col_right + row
+            move_check = this.board_is_move_ok(move);
+
+            if (move_check[1]) result.push(move);
+            if (move_check[0]) break;
+        }
+
+        return result;
+    }
 
     /**
      * Returns array of possible moves of currently selected piece.
@@ -410,6 +454,13 @@ function ChessBoard() {
                 break;
             case PIECES.bishop:
                 result = this.get_avail_area_bishop(col, row, cur);
+                break;
+            case PIECES.rook:
+                result = this.get_avail_area_rook(col, row, cur);
+                break;
+            case PIECES.queen:
+                result = this.get_avail_area_bishop(col, row, cur);
+                result = result.concat(this.get_avail_area_rook(col, row, cur));
                 break;
         }
 
