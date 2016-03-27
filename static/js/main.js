@@ -327,18 +327,16 @@ function ChessBoard() {
             [col_decrease(col), [row+2, row-2]],
             [col_increase(col), [row+2, row-2]],
             [col_increase(col, 2), [row+1, row-1]]
-        ];
+        ].filter(function(elem) { return elem[0]; });
 
         for (var idx = 0; idx < moves.length; idx++) {
             var new_col = moves[idx][0];
             var new_rows = moves[idx][1];
 
-            if (new_col) {
-                for (var jdx = 0; jdx < new_rows.length; jdx++) {
-                    if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
-                        var new_move = new_col + new_rows[jdx];
-                        if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
-                    }
+            for (var jdx = 0; jdx < new_rows.length; jdx++) {
+                if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
+                    var new_move = new_col + new_rows[jdx];
+                    if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
                 }
             }
         }
