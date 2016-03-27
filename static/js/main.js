@@ -114,6 +114,7 @@ function ChessBoard() {
 
     this.selected = undefined;
     this.selected_move_area = [];
+    this.king_pos = undefined;
 
     //Initialize board
     this.iterate(function(me, id) {
@@ -175,9 +176,9 @@ function ChessBoard() {
     /**
      * Check if enemy king has been checked after move.
      *
-     * @param moved_to Location where piece has been moved
+     * @param moved_to Location where piece has moved.
      */
-    this.is_check = function(moved_to) {
+    this.is_enemy_check = function(moved_to) {
         var move_area = this.get_avail_area();
         for (var idx = 0; idx < move_area.length; idx++) {
             var block = BOARD[move_area[idx]];
@@ -187,6 +188,39 @@ function ChessBoard() {
                 break;
             }
         }
+    };
+
+    /**
+     * Checks if player's king got exposed to enemy.
+     *
+     * @return Bool.
+     */
+    this.is_me_check = function() {
+        //emulates set by using object's keys.
+        var set_enemy_moves = {};
+
+        ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
+            for (var i = 1; i < 9; i++) {
+                var enemy_pos = col+i;
+
+                if (this[enemy_pos].team === TEAM.none ||
+                    this[enemy_pos].team === PLAYER_TEAM) continue;
+
+                var old_team = PLAYER_TEAM;
+
+                if (PLAYER_TEAM === TEAM.black) PLAYER_TEAM = TEAM.white;
+                else PLAYER_TEAM = TEAM.black;
+
+                var enemy_area = this.get_avail_area(enemy_pos, true);
+                for (var enemy_idx = 0; enemy_idx < enemy_area.length; enemy_idx++) {
+                    set_enemy_moves[enemy_area[enemy_idx]] = true;
+                }
+
+                PLAYER_TEAM = old_team;
+            }
+        }, this);
+
+        return this.king_pos in set_enemy_moves;
     };
 
     /**
@@ -201,12 +235,20 @@ function ChessBoard() {
         var old_pos = this[this.selected];
         var new_pos = this[to];
 
+        if (old_pos.piece === PIECES.king) {
+            this.king_pos = to;
+            if (this.is_me_check()) {
+                this.king_pos = this.selected;
+                return;
+            }
+        }
+
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
         this.reset(this.selected);
-        this.selected = to;
-        this.is_check();
+
+        this.is_enemy_check();
         this.selected = undefined;
     };
 
@@ -226,8 +268,10 @@ function ChessBoard() {
 
     /**
      * Returns array of possible moves for pawn.
+     *
+     * @param eat Flag for special handling of king's check.
      */
-    this.get_avail_area_pawn = function(col, row, cur) {
+    this.get_avail_area_pawn = function(col, row, cur, eat) {
         var result = [];
         var new_row;
 
@@ -241,6 +285,17 @@ function ChessBoard() {
         var move = col + new_row;
         var eat_left = col_decrease(col) + new_row;
         var eat_right = col_increase(col) + new_row;
+
+        //Check if can eat
+        if (eat_left && (eat || this.is_enemy_team(eat_left))) {
+            result.push(eat_left);
+        }
+
+        if (eat_right && (eat || this.is_enemy_team(eat_right))) {
+            result.push(eat_right);
+        }
+
+        if (eat) return result;
 
         if (this[move].team === TEAM.none) {
             result.push(move);
@@ -256,16 +311,6 @@ function ChessBoard() {
 
                 if (this[move].team === TEAM.none) result.push(move);
             }
-        }
-
-        //Check if can eat
-        //See def.js for logic
-        if (eat_left && this.is_enemy_team(eat_left)) {
-            result.push(eat_left);
-        }
-
-        if (eat_right && this.is_enemy_team(eat_right)) {
-            result.push(eat_right);
         }
 
         return result;
@@ -320,7 +365,8 @@ function ChessBoard() {
         }
 
         return result;
-    }
+    };
+
     /**
      * Returns array of possible moves for bishop.
      */
@@ -416,7 +462,7 @@ function ChessBoard() {
         }
 
         for (var col_left = col_decrease(col); col_left !== undefined; col_left = col_decrease(col_left)) {
-            move = col_left + row
+            move = col_left + row;
             move_check = this.board_is_move_ok(move);
 
             if (move_check[1]) result.push(move);
@@ -424,7 +470,7 @@ function ChessBoard() {
         }
 
         for (var col_right = col_increase(col); col_right !== undefined; col_right = col_increase(col_right)) {
-            move = col_right + row
+            move = col_right + row;
             move_check = this.board_is_move_ok(move);
 
             if (move_check[1]) result.push(move);
@@ -432,7 +478,7 @@ function ChessBoard() {
         }
 
         return result;
-    }
+    };
 
     /**
      * Returns array of possible moves for king.
@@ -456,24 +502,28 @@ function ChessBoard() {
         }, this).map(function(val) {
             return val[0] + val[1];
         });
-
-
-    }
+    };
 
     /**
      * Returns array of possible moves of currently selected piece.
      *
-     * @TODO Add parameter?
+     * @param pos Piece location.
+     * @param eat Flag for pawn to get eat-only moves.
+     *
+     * @return List of possible moves.
      */
-    this.get_avail_area = function() {
+    this.get_avail_area = function(pos, eat) {
         var result = [];
-        var col = this.selected[0];
-        var row = parseInt(this.selected[1]);
-        var cur = this[this.selected];
+        if (!pos) {
+            pos = this.selected;
+        }
+        var col = pos[0];
+        var row = parseInt(pos[1]);
+        var cur = this[pos];
 
         switch (cur.piece) {
             case PIECES.pawn:
-                result = this.get_avail_area_pawn(col, row, cur);
+                result = this.get_avail_area_pawn(col, row, cur, eat);
                 break;
             case PIECES.knight:
                 result = this.get_avail_area_knight(col, row, cur);
@@ -539,6 +589,9 @@ function chess_init() {
         BOARD[col2].team = TEAM.white;
         BOARD[col2].piece = PIECES.pawn;
     });
+
+    if (PLAYER_TEAM === TEAM.white) BOARD.king_pos = "e2";
+    else BOARD.king_pos = "e7";
 }
 
 /**
