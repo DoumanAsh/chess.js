@@ -228,6 +228,7 @@ function ChessBoard() {
      *
      * Clear selection and checks for enemy king being checked
      * by this move.
+     * Cancel move if own king is under threat.
      *
      * @param to New location.
      */
@@ -235,12 +236,11 @@ function ChessBoard() {
         var old_pos = this[this.selected];
         var new_pos = this[to];
 
-        if (old_pos.piece === PIECES.king) {
-            this.king_pos = to;
-            if (this.is_me_check()) {
-                this.king_pos = this.selected;
-                return;
-            }
+        if (old_pos.piece === PIECES.king) this.king_pos = to;
+
+        if (this.is_me_check()) {
+            if (old_pos.piece === PIECES.king) this.king_pos = this.selected;
+            return;
         }
 
         new_pos.team = old_pos.team;
