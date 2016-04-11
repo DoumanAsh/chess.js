@@ -4,17 +4,37 @@ script(src="/js/def.js")
 script(src="/js/main.js")
 
 body
-    div(class="chess_board")
+    div(id="chess_board", class="chess_board")
         - for (var i = 8; i > 0; i--)
             if i % 2
                 - var cell = "black"
             else
                 - var cell = "white"
             each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
-                div(id=col+i, class=cell)
+                div(id=col+i, class=cell)= col+i
                 if cell === "white"
                     - cell = "black"
                 else
                     - cell = "white"
+
+    div(id="menu")
+        div(id="select_side")
+            p(class="menu_text")= "View side:   "
+            select(onchange="reverse_board()")
+                option= "White"
+                option= "Black"
+        div(id="select_promotion")
+            p(class="menu_text")= "Pawn promotion:   "
+            select
+                option= "Queen"
+                option= "Rook"
+                option= "Bishop"
+                option= "Knight"
+        div(id="team_name")
+            p(class="menu_text")= "Team:   "
+            div(class="menux_box")= "WHITE"
+        div(id="turn_name")
+            p(class="menu_text")= "Turn:   "
+            div(class="menux_box")= "WHITE"
     script.
         chess_init()

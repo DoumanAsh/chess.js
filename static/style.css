@@ -10,11 +10,37 @@ body {
     background: url(img/noise.jpg);
 }
 
+select {
+    text-align: center;
+}
+
 /* Chess board part */
+#menu {
+    display: flex;
+    width: 640px;
+    margin: auto;
+    margin-top: 25px;
+    padding: 25px;
+    background-color: #969696;
+    box-shadow: inset 0 25px 27px -10px #BDBDBD;
+    border: 1px solid #424242;
+}
+
+p.menu_text {
+    font-size: medium;
+    color: #080808;
+}
+
+#menu div {
+    display: flex;
+    margin-right: 25px;
+}
+
 .chess_board {
     width: 640px;
     height: 640px;
-    margin: 25px;
+    margin: auto;
+    margin-top: 25px;
     border: 25px solid #333;
 }
 

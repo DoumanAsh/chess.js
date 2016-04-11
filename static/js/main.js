@@ -593,6 +593,23 @@ function chess_init() {
 }
 
 /**
+ * Reverse chess_board
+ */
+function reverse_board() {
+    var chess_board = document.getElementById("chess_board");
+    var nodes = chess_board.childNodes;
+    var array_nodes = [];
+
+    for (var idx = 0; idx < nodes.length; idx++) {
+        array_nodes.unshift(nodes[idx]);
+    }
+
+    for (idx = 0; idx < nodes.length; idx++) {
+        chess_board.appendChild(array_nodes[idx]);
+    }
+}
+
+/**
  * Cleans game and initialize board anew.
  */
 function reset() {
