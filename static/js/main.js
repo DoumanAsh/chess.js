@@ -179,8 +179,7 @@ function ChessBoard() {
      * @param moved_to Location where piece has moved.
      */
     this.is_enemy_check = function(moved_to) {
-        var move_area = this.get_avail_area();
-        console.log(move_area);
+        var move_area = this.get_avail_area(moved_to);
         for (var idx = 0; idx < move_area.length; idx++) {
             var block = BOARD[move_area[idx]];
             if (block.piece === PIECES.king && block.team !== PLAYER_TEAM) {
@@ -247,7 +246,7 @@ function ChessBoard() {
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
-        this.is_enemy_check();
+        this.is_enemy_check(to);
 
         this.reset(this.selected);
         this.selected = undefined;
