@@ -14,7 +14,7 @@ select {
     text-align: center;
 }
 
-/* Chess board part */
+/* Menu box */
 #menu {
     margin: auto;
     margin-top: 20px;
@@ -34,6 +34,7 @@ select {
     margin-bottom: 5rem;
 }
 
+/* Chess board part */
 .chess_board {
     width: 640px;
     height: 640px;

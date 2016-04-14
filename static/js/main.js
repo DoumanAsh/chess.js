@@ -191,6 +191,31 @@ function ChessBoard() {
     };
 
     /**
+     * Check if pawn and promotion is needed.
+     */
+    this.is_pawn_promo = function(move_to) {
+        var pos = this[move_to];
+
+        if (pos.piece !== PIECES.pawn) return;
+
+        if ((pos.team === TEAM.black && move_to[1] === "1") ||
+            (pos.team === TEAM.white && move_to[1] === "8")) {
+
+            var promo_select = document.getElementById("pawn_promo");
+            var figure_name = promo_select.options[promo_select.selectedIndex].value;
+            var figure_map = {
+                Queen: PIECES.queen,
+                Rook: PIECES.rook,
+                Bishop: PIECES.bishop,
+                Knight: PIECES.knight
+            };
+
+            pos.piece = figure_map[figure_name];
+            pos.div.className = pos.div.className.replace(/_[^]+/, "_" + figure_name.toLowerCase());
+        }
+    };
+
+    /**
      * Checks if player's king got exposed to enemy.
      *
      * @return Bool.
@@ -246,6 +271,7 @@ function ChessBoard() {
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
+        this.is_pawn_promo(to);
         this.is_enemy_check(to);
 
         this.reset(this.selected);
