@@ -17,24 +17,30 @@ body
                 else
                     - cell = "white"
 
-    div(id="menu")
-        div(id="select_side")
-            p(class="menu_text")= "View side:   "
-            select(onchange="reverse_board()")
-                option= "White"
-                option= "Black"
-        div(id="select_promotion")
-            p(class="menu_text")= "Pawn promotion:   "
-            select
-                option= "Queen"
-                option= "Rook"
-                option= "Bishop"
-                option= "Knight"
-        div(id="team_name")
-            p(class="menu_text")= "Team:   "
-            div(class="menux_box")= "WHITE"
-        div(id="turn_name")
-            p(class="menu_text")= "Turn:   "
-            div(class="menux_box")= "WHITE"
+    table(id="menu")
+        tr
+            th
+                p(class="menu_text")= "View side"
+            th
+                p(class="menu_text")= "Pawn promotion"
+            th
+                p(class="menu_text")= "Team"
+            th
+                p(class="menu_text")= "Turn"
+        tr
+            td
+                select(style="width: 100%", onchange="reverse_board()")
+                    option= "White"
+                    option= "Black"
+            td
+                select(style="width: 100%")
+                    option= "Queen"
+                    option= "Rook"
+                    option= "Bishop"
+                    option= "Knight"
+            td
+                div(class="menux_box")= "WHITE"
+            td
+                div(class="menux_box")= "WHITE"
     script.
         chess_init()

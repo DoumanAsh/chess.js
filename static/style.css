@@ -16,24 +16,22 @@ select {
 
 /* Chess board part */
 #menu {
-    display: flex;
-    width: 640px;
     margin: auto;
-    margin-top: 25px;
-    padding: 25px;
+    margin-top: 20px;
+    padding: 20px;
     background-color: #969696;
     box-shadow: inset 0 25px 27px -10px #BDBDBD;
     border: 1px solid #424242;
 }
 
-p.menu_text {
-    font-size: medium;
-    color: #080808;
+#menu th, td {
+    text-align: center;
+    /* To make space between columns bigger than between rows */
+    padding: 0 15px 0 15px;
 }
 
-#menu div {
-    display: flex;
-    margin-right: 25px;
+#menu tr {
+    margin-bottom: 5rem;
 }
 
 .chess_board {
