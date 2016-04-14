@@ -115,6 +115,9 @@ function ChessBoard() {
     this.selected = undefined;
     this.selected_move_area = [];
     this.king_pos = undefined;
+    this.king_moved = false;
+    this.h_rook_moved = false;
+    this.a_rook_moved = false;
 
     //Initialize board
     this.iterate(function(me, id) {
@@ -193,9 +196,8 @@ function ChessBoard() {
     /**
      * Check if pawn and promotion is needed.
      */
-    this.is_pawn_promo = function(move_to) {
-        var pos = this[move_to];
-
+    this.is_pawn_promo = function(pos) {
+        var move_to = pos.div.id;
         if (pos.piece !== PIECES.pawn) return;
 
         if ((pos.team === TEAM.black && move_to[1] === "1") ||
@@ -249,6 +251,53 @@ function ChessBoard() {
     };
 
     /**
+     * Checks if castling possibility is lost
+     */
+    this.is_castling_lost = function(pos) {
+        if (pos.piece === PIECES.king) {
+            this.king_moved = true;
+
+            var pos_id = pos.div.id;
+            var num;
+            if (PLAYER_TEAM === TEAM.black) num = "8";
+            else num = "1";
+
+            if (pos_id[1] === num) {
+                var old_selected = this.selected;
+                //move rook according castling
+                if (!this.h_rook_moved && pos_id[0] === "g") {
+                    this.selected = "h" + num;
+                    this.move(col_decrease(this.king_pos[0]) + num);
+
+                    this.selected = old_selected;
+                }
+                else if (!this.a_rook_moved && pos_id[0] === "c") {
+                    this.selected = "a" + num;
+                    this.move(col_increase(this.king_pos[0]) + num);
+
+                    this.selected = old_selected;
+                }
+            }
+
+        }
+        else if (pos.piece === PIECES.rook) {
+            if (this.selected[0] === "h") this.h_rook_moved = true;
+            else if (this.selected[0] === "a") this.a_rook_moved = true;
+
+            this.king_moved = this.h_rook_moved && this.a_rook_moved;
+        }
+
+        if (this.king_moved) {
+            this.get_avail_castling_king = function() {
+                return [];
+            };
+            this.is_castling_lost = function() {
+                return undefined;
+            };
+        }
+    };
+
+    /**
      * @brief Moves piece to new location.
      *
      * Clear selection and checks for enemy king being checked
@@ -259,6 +308,7 @@ function ChessBoard() {
      */
     this.move = function(to) {
         var old_pos = this[this.selected];
+        console.log(to);
         var new_pos = this[to];
 
         if (old_pos.piece === PIECES.king) this.king_pos = to;
@@ -271,7 +321,9 @@ function ChessBoard() {
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
-        this.is_pawn_promo(to);
+        this.is_pawn_promo(new_pos);
+        this.is_castling_lost(new_pos);
+
         this.is_enemy_check(to);
 
         this.reset(this.selected);
@@ -505,6 +557,38 @@ function ChessBoard() {
     };
 
     /**
+     * @brief Returns array of possible castling moves for king.
+     *
+     * Overridden when castling is no longer possible.
+     */
+    this.get_avail_castling_king = function(cur) {
+        var cur_id = cur.div.id;
+        var result = [];
+        var num;
+        if (PLAYER_TEAM === TEAM.black) num = "8";
+        else num = "1";
+
+        if (cur_id[1] !== num) return result;
+
+        var h_pos = this["h" + num];
+        var a_pos = this["a" + num];
+
+        if (!this.h_rook_moved && h_pos.team === PLAYER_TEAM && h_pos.piece === PIECES.rook) {
+            if (this["g" + num].team === TEAM.none && this["f" + num].team === TEAM.none) {
+                result.push("g" + num);
+            }
+        }
+
+        if (!this.a_rook_moved && a_pos.team === PLAYER_TEAM && a_pos.piece === PIECES.rook) {
+            if (this["d" + num].team === TEAM.none && this["c" + num].team === TEAM.none && this["b" + num].team === TEAM.none) {
+                result.push("c" + num);
+            }
+        }
+
+        return result;
+    };
+
+    /**
      * Returns array of possible moves for king.
      */
     this.get_avail_area_king = function(col, row, cur) {
@@ -564,6 +648,7 @@ function ChessBoard() {
                 break;
             case PIECES.king:
                 result = this.get_avail_area_king(col, row, cur);
+                result = result.concat(this.get_avail_castling_king(cur));
                 break;
         }
 
