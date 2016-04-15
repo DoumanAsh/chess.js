@@ -1,3 +1,19 @@
+'use strict';
+var PIECES = {
+    none: 0,
+    pawn: 1,
+    knight: 2,
+    bishop: 3,
+    rook: 4,
+    queen: 5,
+    king: 6
+};
+var TEAM = {
+    none: 0,
+    black: 7,
+    white: 2,
+};
+
 var BOARD;
 var PLAYER_TEAM = TEAM.white;
 
@@ -72,7 +88,7 @@ function click() {
 function selected_click(id) {
     var block = BOARD[id];
 
-    if (block.team == PLAYER_TEAM) {
+    if (block.team === PLAYER_TEAM) {
         BOARD.unselect();
         BOARD.select(id);
         return;
@@ -80,7 +96,7 @@ function selected_click(id) {
 
     var move_to = BOARD.selected_move_area.indexOf(id);
 
-    if (move_to != -1) {
+    if (move_to !== -1) {
         BOARD.move(BOARD.selected_move_area[move_to]);
     }
 }
@@ -91,7 +107,7 @@ function selected_click(id) {
 function not_selected_click(id) {
     var block = BOARD[id];
 
-    if ((block.piece === PIECES.none) || !block.team || (PLAYER_TEAM != block.team)) {
+    if ((block.piece === PIECES.none) || !block.team || (PLAYER_TEAM !== block.team)) {
         return;
     }
 
@@ -407,7 +423,7 @@ function ChessBoard() {
     /**
      * Returns array of possible moves for knight.
      */
-    this.get_avail_area_knight = function(col, row, cur) {
+    this.get_avail_area_knight = function(col, row) {
         var result = [];
 
         var moves = [
@@ -456,7 +472,7 @@ function ChessBoard() {
     /**
      * Returns array of possible moves for bishop.
      */
-    this.get_avail_area_bishop = function(col, row, cur) {
+    this.get_avail_area_bishop = function(col, row) {
         var result = [];
 
         var move, move_check;
@@ -527,7 +543,7 @@ function ChessBoard() {
     /**
      * Returns array of possible moves for rook.
      */
-    this.get_avail_area_rook = function(col, row, cur) {
+    this.get_avail_area_rook = function(col, row) {
         var result = [];
         var move, move_check;
 
@@ -571,8 +587,7 @@ function ChessBoard() {
      *
      * Overridden when castling is no longer possible.
      */
-    this.get_avail_castling_king = function(cur) {
-        var cur_id = cur.div.id;
+    this.get_avail_castling_king = function() {
         var result = [];
 
         if (this.king_moved) return result;
@@ -612,7 +627,7 @@ function ChessBoard() {
     /**
      * Returns array of possible moves for king.
      */
-    this.get_avail_area_king = function(col, row, cur) {
+    this.get_avail_area_king = function(col, row) {
         var col_left = col_decrease(col);
         var col_right = col_increase(col);
         var row_up = row + 1;
@@ -655,21 +670,21 @@ function ChessBoard() {
                 result = this.get_avail_area_pawn(col, row, cur, eat);
                 break;
             case PIECES.knight:
-                result = this.get_avail_area_knight(col, row, cur);
+                result = this.get_avail_area_knight(col, row);
                 break;
             case PIECES.bishop:
-                result = this.get_avail_area_bishop(col, row, cur);
+                result = this.get_avail_area_bishop(col, row);
                 break;
             case PIECES.rook:
-                result = this.get_avail_area_rook(col, row, cur);
+                result = this.get_avail_area_rook(col, row);
                 break;
             case PIECES.queen:
                 result = this.get_avail_area_bishop(col, row, cur);
                 result = result.concat(this.get_avail_area_rook(col, row, cur));
                 break;
             case PIECES.king:
-                result = this.get_avail_area_king(col, row, cur);
-                result = result.concat(this.get_avail_castling_king(cur));
+                result = this.get_avail_area_king(col, row);
+                result = result.concat(this.get_avail_castling_king());
                 break;
         }
 
