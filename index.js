@@ -19,6 +19,11 @@ app.get('/chess_board', function (req, res) {
     res.render("chess_board");
 });
 
+//The 404 Route (ALWAYS Keep this as the last route)
+app.get('*', function(req, res){
+    res.status(404).render("404");
+});
+
 http.listen(PORT, function () {
     console.log('Start chess.js on port ' + PORT);
 });
