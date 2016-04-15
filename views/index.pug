@@ -1,4 +1,18 @@
 include ./head.pug
 
 body
-    h1= title
+    form(id="party_form")
+        div(id="party_form_cap")= "Create a chess party"
+        input(id="form_name", type="text", placeholder="Name", required)
+        div(style="display:flex; justify-content: space-between; margin-top: 0.5rem; margin-left: 0.5rem; margin-right: 0.5rem;")
+            div(style="display:flex")
+                p(style="margin-right: 1rem")= "Side:"
+                select(id="form_side", style="width: 4rem")
+                    option= "White"
+                    option= "Black"
+            div(style="display:flex")
+                p(style="margin-right: 1rem")= "Party type:"
+                select(id="form_party_type", style="width: 4rem")
+                    option= "Private"
+                    option= "Public"
+        button(type="submit")= "GO"

@@ -14,6 +14,58 @@ select {
     text-align: center;
 }
 
+/* Party creation form */
+form#party_form {
+    width: 25rem;
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #969696;
+    padding-bottom: 0.5rem;
+}
+
+form#party_form div#party_form_cap {
+    background: #4D3D9E;
+    padding: 15px;
+    margin-bottom: 10px;
+    color: #fff;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+form#party_form input {
+    width: calc(100% - 1.5rem);
+    padding: 0.2rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+form#party_form button {
+    width: 6rem;
+    height: 35px;
+    display: block;
+    margin: 0 auto 0px auto;
+    background: #4D3D9E;
+    border: none;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    border-radius: 0.2rem;
+    box-shadow: 2px 2px 5px #000;
+}
+
+form#party_form button:active {
+    box-shadow: 0px 0px 3px #000;
+    transform: translateY(1px);
+}
+
+form#party_form button:hover {
+    color: #4D3D9E;
+    background: #ffffff;
+    outline: 0;
+}
+
 /* Menu box */
 #menu {
     margin: auto;

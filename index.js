@@ -10,9 +10,7 @@ app.set('view engine', 'pug');
 app.use('/', express.static(__dirname + '/static'));
 
 app.get('/', function (req, res) {
-    res.render("index", {
-        title: "hello word"
-    });
+    res.render("index");
 });
 
 app.get('/chess_board', function (req, res) {
