@@ -1,8 +1,11 @@
 include ./head.pug
 
+script(src="/js/main.js")
+
 body
+    div(class="overlay")
     form(id="party_form")
-        div(id="party_form_cap")= "Create a chess party"
+        div(id="party_form_cap", style="text-align: center")= "Create a chess party"
         input(id="form_name", type="text", placeholder="Name", required)
         div(style="display:flex; justify-content: space-between; margin-top: 0.5rem; margin-left: 0.5rem; margin-right: 0.5rem;")
             div(style="display:flex")
@@ -15,4 +18,45 @@ body
                 select(id="form_party_type", style="width: 4rem")
                     option= "Private"
                     option= "Public"
+                    option= "Hotspot"
         button(type="submit")= "GO"
+    div(id="chess_board", class="chess_board")
+        - for (var i = 8; i > 0; i--)
+            if i % 2
+                - var cell = "black"
+            else
+                - var cell = "white"
+            each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
+                div(id=col+i, class=cell)= col+i
+                if cell === "white"
+                    - cell = "black"
+                else
+                    - cell = "white"
+
+    table(id="menu")
+        tr
+            th
+                p(class="menu_text")= "View side"
+            th
+                p(class="menu_text")= "Pawn promotion"
+            th
+                p(class="menu_text")= "Team"
+            th
+                p(class="menu_text")= "Turn"
+        tr
+            td
+                select(style="width: 100%", onchange="reverse_board()")
+                    option= "White"
+                    option= "Black"
+            td
+                select(id="pawn_promo", style="width: 100%")
+                    option= "Queen"
+                    option= "Rook"
+                    option= "Bishop"
+                    option= "Knight"
+            td
+                div(class="menux_box")= "WHITE"
+            td
+                div(class="menux_box")= "WHITE"
+    script.
+        chess_init()

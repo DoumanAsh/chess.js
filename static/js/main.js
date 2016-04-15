@@ -15,7 +15,7 @@ var TEAM = {
 };
 
 var BOARD;
-var PLAYER_TEAM = TEAM.white;
+var PLAYER_TEAM = TEAM.none;
 
 /**
  * Column/letter decrease by one

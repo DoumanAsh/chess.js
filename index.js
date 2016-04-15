@@ -10,6 +10,7 @@ app.set('view engine', 'pug');
 app.use('/', express.static(__dirname + '/static'));
 
 app.get('/', function (req, res) {
+    console.log(req.query);
     res.render("index");
 });
 

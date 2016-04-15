@@ -14,14 +14,50 @@ select {
     text-align: center;
 }
 
+/* Overlay with animations */
+@keyframes fade-in {
+    from {
+        opacity:0;
+        opacity: 1\9; /* IE9 only */
+    } to {
+        opacity:1;
+    }
+}
+
+@keyframes fly-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+div.overlay {
+    animation: fade-in 0.5s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
 /* Party creation form */
 form#party_form {
+    animation: fly-in 1s;
     width: 25rem;
     position: absolute;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #969696;
+    left: 40%; top: 40%;
+    background-color: #4FC5B0;
     padding-bottom: 0.5rem;
+    border-radius: 0.2rem;
+    box-shadow: 2px 2px 5px #000;
+    z-index: 2;
 }
 
 form#party_form div#party_form_cap {
