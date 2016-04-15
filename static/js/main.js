@@ -197,9 +197,9 @@ function ChessBoard() {
      * Check if pawn and promotion is needed.
      */
     this.is_pawn_promo = function(pos) {
-        var move_to = pos.div.id;
         if (pos.piece !== PIECES.pawn) return;
 
+        var move_to = pos.div.id;
         if ((pos.team === TEAM.black && move_to[1] === "1") ||
             (pos.team === TEAM.white && move_to[1] === "8")) {
 
@@ -218,14 +218,12 @@ function ChessBoard() {
     };
 
     /**
-     * Checks if player's king got exposed to enemy.
+     * @brief Gets movement area of enemy.
      *
-     * @return Bool.
+     * Emulates set by using object's keys.
      */
-    this.is_me_check = function() {
-        //emulates set by using object's keys.
+    this.get_enemy_avail_area = function() {
         var set_enemy_moves = {};
-
         ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
             for (var i = 1; i < 9; i++) {
                 var enemy_pos = col+i;
@@ -234,6 +232,9 @@ function ChessBoard() {
                     this[enemy_pos].team === PLAYER_TEAM) continue;
 
                 var old_team = PLAYER_TEAM;
+                /* Avoid castling calculation for enemy king */
+                var old_king_moved = this.king_moved;
+                this.king_moved = true;
 
                 if (PLAYER_TEAM === TEAM.black) PLAYER_TEAM = TEAM.white;
                 else PLAYER_TEAM = TEAM.black;
@@ -244,10 +245,20 @@ function ChessBoard() {
                 }
 
                 PLAYER_TEAM = old_team;
+                this.king_moved = old_king_moved;
             }
         }, this);
 
-        return this.king_pos in set_enemy_moves;
+        return set_enemy_moves;
+    };
+
+    /**
+     * Checks if player's king got exposed to enemy.
+     *
+     * @return Bool.
+     */
+    this.is_me_check = function() {
+        return this.king_pos in this.get_enemy_avail_area();
     };
 
     /**
@@ -308,7 +319,6 @@ function ChessBoard() {
      */
     this.move = function(to) {
         var old_pos = this[this.selected];
-        console.log(to);
         var new_pos = this[to];
 
         if (old_pos.piece === PIECES.king) this.king_pos = to;
@@ -564,23 +574,34 @@ function ChessBoard() {
     this.get_avail_castling_king = function(cur) {
         var cur_id = cur.div.id;
         var result = [];
+
+        if (this.king_moved) return result;
+        if (this.h_rook_moved && this.a_rook_moved) return result;
+
         var num;
         if (PLAYER_TEAM === TEAM.black) num = "8";
         else num = "1";
 
-        if (cur_id[1] !== num) return result;
-
         var h_pos = this["h" + num];
         var a_pos = this["a" + num];
+        var set_enemy_moves = this.get_enemy_avail_area();
+        function is_empty(pos) {
+            return this[pos].team === TEAM.none;
+        }
+        function is_can_castle(pos) {
+            return !(pos in set_enemy_moves);
+        }
 
         if (!this.h_rook_moved && h_pos.team === PLAYER_TEAM && h_pos.piece === PIECES.rook) {
-            if (this["g" + num].team === TEAM.none && this["f" + num].team === TEAM.none) {
+            var move_h = ["f" + num, "g" + num];
+            if (move_h.every(is_empty, this) && move_h.every(is_can_castle, this)) {
                 result.push("g" + num);
             }
         }
 
         if (!this.a_rook_moved && a_pos.team === PLAYER_TEAM && a_pos.piece === PIECES.rook) {
-            if (this["d" + num].team === TEAM.none && this["c" + num].team === TEAM.none && this["b" + num].team === TEAM.none) {
+            var move_a = ["d" + num, "c" + num, "b" + num];
+            if (move_a.every(is_empty, this) && move_a.slice(0, 2).every(is_can_castle, this)) {
                 result.push("c" + num);
             }
         }
