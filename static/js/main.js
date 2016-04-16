@@ -186,6 +186,84 @@ function ChessBoard() {
         }
     };
 
+    /* Fires sync event with board's data */
+    this.sync_game = function(socket) {
+        var data = {
+            name: this.name,
+            side: PLAYER_TEAM,
+            sync_data: {
+                turn: this.turn,
+                board: {}
+            }
+        };
+
+        ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
+            var pos;
+            for (var idx = 1; idx < 9; idx++) {
+                pos = col + idx;
+
+                data.sync_data.board[pos] = {};
+                data.sync_data.board[pos].team = this[pos].team;
+                data.sync_data.board[pos].piece = this[pos].piece;
+            }
+        }, this);
+
+        socket.emit("sync_game", data);
+    };
+
+    /* Sets board element with data into position */
+    this.set_board_elem = function(position, data) {
+        var element = this[position];
+        var team_str;
+
+        if (data.team === TEAM.black) team_str = " black";
+        else if (data.team === TEAM.white) team_str = " white";
+
+        element.team = data.team;
+        element.piece = data.piece;
+
+        switch (data.piece) {
+            case PIECES.pawn:
+                element.div.className += team_str + "_pawn";
+                break;
+            case PIECES.rook:
+                element.div.className += team_str + "_rook";
+                break;
+            case PIECES.knight:
+                element.div.className += team_str + "_knight";
+                break;
+            case PIECES.bishop:
+                element.div.className += team_str + "_bishop";
+                break;
+            case PIECES.queen:
+                element.div.className += team_str + "_queen";
+                break;
+            case PIECES.king:
+                this.king_pos = position;
+                element.div.className += team_str + "_king";
+                break;
+        }
+    };
+
+    /* Restores board from sync data */
+    this.read_sync = function(data) {
+        this.reset();
+
+        this.turn = data.turn;
+        if (this.turn === TEAM.white) document.getElementById("menu_turn").innerHTML = "WHITE";
+        else if (this.turn === TEAM.black) document.getElementById("menu_turn").innerHTML = "BLACK";
+
+        ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
+            var pos;
+            for (var idx = 1; idx < 9; idx++) {
+                pos = col + idx;
+                this.set_board_elem(pos, data.board[pos]);
+            }
+        }, this);
+
+        if (this.is_me_check()) this.me_checked();
+    };
+
     /**
      * Selects element on board.
      *
@@ -895,7 +973,9 @@ window.onbeforeunload = function() {
 };
 
 window.onload = function() {
+    var connected = true;
     var form = document.getElementById("party_form");
+
     if (form) {
         form.addEventListener("submit", function(evet) {
             evet.preventDefault();
@@ -947,16 +1027,30 @@ window.onload = function() {
     }
 
     SOCKET.on("joined", function() {
-        document.body.removeChild(document.body.childNodes[2]);
+        document.getElementById("overlay").style = "display: none";
         document.getElementById('wait').style = "display:none";
+
+        if (!connected) {
+            connected = true;
+            BOARD.sync_game(SOCKET);
+        }
     });
 
     SOCKET.on("join_ok", function() {
     });
 
     SOCKET.on("join_fail", function() {
+        var wait_pop = document.getElementById('wait');
+
         PLAYER_TEAM = TEAM.none;
-        window.alert("Sorry, but you cannot join a game!");
+
+        wait_pop.childNodes[0].innerHTML = "Sorry, but you cannot join this game!";
+        wait_pop.childNodes[1].innerHTML = "Feel free to go back and create your own game.";
+        wait_pop.childNodes[2].href = "/";
+        wait_pop.childNodes[2].innerHTML = "Go back";
+
+        document.getElementById("overlay").style = "";
+        wait_pop.style = "";
     });
 
     SOCKET.on("move", function(move_data) {
@@ -978,5 +1072,25 @@ window.onload = function() {
 
     SOCKET.on("pawn_promo", function(piece, pos) {
         BOARD.pawn_promo(piece, pos);
-    })
+    });
+
+    SOCKET.on("sync_game", function(sync_data) {
+        BOARD.read_sync(sync_data);
+    });
+
+    SOCKET.on("opponent_disconnect", function() {
+        var wait_pop = document.getElementById('wait');
+
+        wait_pop.childNodes[0].innerHTML = "Your opponent has been disconnected...";
+        if (PLAYER_TEAM === TEAM.white) {
+            wait_pop.childNodes[2].href = "/?game=" + BOARD.name + "&side=black";
+        }
+        else {
+            wait_pop.childNodes[2].href = "/?game=" + BOARD.name + "&side=white";
+        }
+
+        document.getElementById("overlay").style = "";
+        wait_pop.style = "";
+        connected = false;
+    });
 };

@@ -68,20 +68,40 @@ class Games {
 
         this.inner[name] = { type: type };
         this.inner[name][side] = socket;
+        socket.chess_name = name;
+        socket.chess_side = side;
         return true;
     }
 
     /* Adds user to existing game. */
     add_user(name, side, socket) {
-        if (!(name in this.inner) || side in this.inner[name]) return false;
+        if (!this.is_game(name) || !this.is_side_free(name, side)) return false;
 
         this.inner[name][side] = socket;
+        socket.chess_name = name;
+        socket.chess_side = side;
         return true;
     }
 
     /* Tests if game exists */
     is_game(name) {
         return name in this.inner;
+    }
+
+    /* Tests if side is free for user to join */
+    is_side_free(name, side) {
+        if (!(side in this.inner[name])) return true;
+
+        return this.inner[name][side] === undefined;
+    }
+
+    /* Handle user disconnect */
+    user_discon(name, side) {
+        this.inner[name][side] = undefined;
+    }
+
+    del_game(name) {
+        delete this.inner[name];
     }
 
     /* Gets game if any. */
@@ -91,7 +111,7 @@ class Games {
 
     /* Gets socket of another's side */
     get_another_socket(name, cur_side) {
-        if (!(name in this.inner)) {
+        if (!this.is_game(name)) {
             throw util.format("get_another_socket(name=%s, cur_side=%s): No such game",
                               name, cur_side);
         }
@@ -165,6 +185,22 @@ io.on('connection', function(socket) {
 
         GAMES.get_another_socket(game_name, checked_by)
              .emit("pawn_promo", data.new_piece, data.pos);
+    });
+
+    socket.on('sync_game', function(data) {
+        GAMES.get_another_socket(data.name, GAMES.enum_side[data.side])
+             .emit("sync_game", data.sync_data);
+    });
+
+    socket.on('disconnect', function() {
+        GAMES.user_discon(socket.chess_name, socket.chess_side);
+        var opponent_socket = GAMES.get_another_socket(socket.chess_name, socket.chess_side);
+
+        if (opponent_socket) opponent_socket.emit("opponent_disconnect");
+        else {
+            /* Terminate game as sync requires at least 1 online */
+            GAMES.del_game(socket.chess_name);
+        }
     });
 });
 

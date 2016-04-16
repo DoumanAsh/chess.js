@@ -22,6 +22,8 @@ body
                         option= "Hotspot"
             button(id="btn", type="submit")= "GO"
         div(id="overlay", class="overlay")
+    else
+        div(id="overlay", class="overlay", style="display:none")
     div(id="wait", style="display:none")
         p= "Waiting for someone to connect..."
         p= "Use your link below to invite your friend for a game"
