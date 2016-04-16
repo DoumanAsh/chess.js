@@ -323,7 +323,7 @@ function ChessBoard() {
     };
 
     /**
-     * Check if pawn and promotion is needed.
+     * Check if pawn's promotion is needed.
      */
     this.is_pawn_promo = function(pos) {
         if (pos.piece !== PIECES.pawn) return;
