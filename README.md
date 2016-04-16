@@ -16,7 +16,7 @@ This time around we have simple multiplayer chess game.
     - [x] Basic moves.
     - [x] Castling.
     - [x] Pawn promotion.
-    - [ ] En passant.
+    - [x] En passant.
     - [x] Marking checked king.
     - [ ] Check for check-mate.
 - [x] Implement shared games

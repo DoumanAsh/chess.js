@@ -140,6 +140,7 @@ function ChessBoard() {
     this.h_rook_moved = false;
     this.a_rook_moved = false;
     this.king_checked = false;
+    this.en_passant_to = undefined;
 
     //Initialize board
     this.iterate(function(me, id) {
@@ -326,8 +327,6 @@ function ChessBoard() {
      * Check if pawn's promotion is needed.
      */
     this.is_pawn_promo = function(pos) {
-        if (pos.piece !== PIECES.pawn) return;
-
         var move_to = pos.div.id;
         if ((pos.team === TEAM.black && move_to[1] === "1") ||
             (pos.team === TEAM.white && move_to[1] === "8")) {
@@ -465,6 +464,47 @@ function ChessBoard() {
     };
 
     /**
+     * Handles En passant move.
+     */
+    this.is_move_en_passant = function(to) {
+        if (to === this.en_passant_to) {
+            var passanted_pawn_pos = to[0];
+
+            if (PLAYER_TEAM === TEAM.white) passanted_pawn_pos += "5";
+            else passanted_pawn_pos += "4";
+
+            SOCKET.emit("en_passant", {
+                name: this.name,
+                side: PLAYER_TEAM,
+                poor_pawn: passanted_pawn_pos
+            });
+
+            this.reset(passanted_pawn_pos);
+        }
+
+        this.en_passant_to = undefined;
+    };
+
+    /**
+     * Checks if it is possible to perform En passant.
+     */
+    this.is_en_passant = function(pos) {
+        return this.en_passant_to && pos && (this[pos].team === TEAM.none && pos === this.en_passant_to);
+    };
+
+    /**
+     * Set if En passant is possible for moved pawn.
+     */
+    this.en_passant = function(from, to) {
+        if (PLAYER_TEAM === TEAM.white && from[1] === "7" && to[1] === "5") {
+            this.en_passant_to = from[0] + "6";
+        }
+        else if (PLAYER_TEAM === TEAM.black && from[1] === "2" && to[1] === "4") {
+            this.en_passant_to = from[0] + "3";
+        }
+    };
+
+    /**
      * Performs enemy move.
      */
     this.enemy_move = function(from, to) {
@@ -474,6 +514,8 @@ function ChessBoard() {
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
+
+        if (new_pos.piece === PIECES.pawn) this.en_passant(from, to);
 
         this.reset(from);
     };
@@ -514,7 +556,10 @@ function ChessBoard() {
             finished: finished
         });
 
-        this.is_pawn_promo(new_pos);
+        if (new_pos.piece === PIECES.pawn) {
+            this.is_move_en_passant(to);
+            this.is_pawn_promo(new_pos);
+        }
         this.is_castling_lost(new_pos);
 
         this.is_enemy_check(to);
@@ -560,11 +605,11 @@ function ChessBoard() {
         var eat_right = col_increase(col) + new_row;
 
         //Check if can eat
-        if (eat_left && (eat || this.is_enemy_team(eat_left))) {
+        if (eat_left && (this.is_enemy_team(eat_left)) || this.is_en_passant(eat_left)) {
             result.push(eat_left);
         }
 
-        if (eat_right && (eat || this.is_enemy_team(eat_right))) {
+        if (eat_right && this.is_enemy_team(eat_right) || this.is_en_passant(eat_right)) {
             result.push(eat_right);
         }
 
@@ -573,7 +618,7 @@ function ChessBoard() {
         if (this[move].team === TEAM.none) {
             result.push(move);
             //First move can be for 2 cells
-            //See def.js for logic
+            //See TEAM enum for logic
             if ((cur.team - row) === 0) {
                 if (cur.team === TEAM.white) {
                     move = col + (row + 2);
@@ -1076,6 +1121,10 @@ window.onload = function() {
 
     SOCKET.on("sync_game", function(sync_data) {
         BOARD.read_sync(sync_data);
+    });
+
+    SOCKET.on("en_passant", function(poor_pawn) {
+        BOARD.reset(poor_pawn);
     });
 
     SOCKET.on("opponent_disconnect", function() {

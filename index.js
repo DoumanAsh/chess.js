@@ -192,6 +192,11 @@ io.on('connection', function(socket) {
              .emit("sync_game", data.sync_data);
     });
 
+    socket.on("en_passant", function(data) {
+        GAMES.get_another_socket(data.name, GAMES.enum_side[data.side])
+             .emit("en_passant", data.poor_pawn);
+    });
+
     socket.on('disconnect', function() {
         GAMES.user_discon(socket.chess_name, socket.chess_side);
         var opponent_socket = GAMES.get_another_socket(socket.chess_name, socket.chess_side);
