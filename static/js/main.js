@@ -560,6 +560,7 @@ function ChessBoard() {
             this.is_move_en_passant(to);
             this.is_pawn_promo(new_pos);
         }
+        this.en_passant_to = undefined;
         this.is_castling_lost(new_pos);
 
         this.is_enemy_check(to);
