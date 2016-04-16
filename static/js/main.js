@@ -16,6 +16,7 @@ var TEAM = {
 
 var BOARD;
 var PLAYER_TEAM = TEAM.none;
+var SOCKET = io();
 
 /**
  * Column/letter decrease by one
@@ -73,6 +74,8 @@ function col_increase(col, times) {
  * Chess board click callback.
  */
 function click() {
+    if (BOARD.turn !== PLAYER_TEAM) return;
+
     if (BOARD.selected) {
         selected_click(this.id);
     }
@@ -128,12 +131,15 @@ function ChessBoard() {
         }, this);
     };
 
+    this.name = undefined;
+    this.turn = TEAM.white;
     this.selected = undefined;
     this.selected_move_area = [];
     this.king_pos = undefined;
     this.king_moved = false;
     this.h_rook_moved = false;
     this.a_rook_moved = false;
+    this.king_checked = false;
 
     //Initialize board
     this.iterate(function(me, id) {
@@ -144,6 +150,20 @@ function ChessBoard() {
         };
         me[id].div.onclick=click;
     });
+
+    /**
+     * Ends current turn.
+     */
+    this.turn_end = function() {
+        if (BOARD.turn === TEAM.white) {
+            BOARD.turn = TEAM.black;
+            document.getElementById("menu_turn").innerHTML = "BLACK";
+        }
+        else if (BOARD.turn === TEAM.black) {
+            BOARD.turn = TEAM.white;
+            document.getElementById("menu_turn").innerHTML = "WHITE";
+        }
+    };
 
     /**
      * Resets element/board to initial values(empty).
@@ -203,10 +223,25 @@ function ChessBoard() {
             var block = BOARD[move_area[idx]];
             if (block.piece === PIECES.king && block.team !== PLAYER_TEAM) {
                 block.div.className = block.div.className + " checked";
-                //TODO event check
+                SOCKET.emit("check", {
+                    name: this.name,
+                    side: PLAYER_TEAM,
+                });
                 break;
             }
         }
+    };
+
+    this.pawn_promo = function(new_piece, position) {
+        var pos = this[position];
+        var figure_map = {};
+        figure_map[PIECES.queen] = "queen";
+        figure_map[PIECES.rook] = "rook";
+        figure_map[PIECES.bishop] = "bishop";
+        figure_map[PIECES.knight] = "knight";
+
+        pos.piece = new_piece;
+        pos.div.className = pos.div.className.replace(/_[^]+/, "_" + figure_map[new_piece]);
     };
 
     /**
@@ -230,6 +265,13 @@ function ChessBoard() {
 
             pos.piece = figure_map[figure_name];
             pos.div.className = pos.div.className.replace(/_[^]+/, "_" + figure_name.toLowerCase());
+
+            SOCKET.emit("pawn_promo", {
+                name: this.name,
+                side: PLAYER_TEAM,
+                new_piece: pos.piece,
+                pos: move_to
+            });
         }
     };
 
@@ -269,6 +311,26 @@ function ChessBoard() {
     };
 
     /**
+     * Checks own king upon event from server.
+     */
+    this.me_checked = function() {
+        this.king_checked = true;
+        this[this.king_pos].div.className = this[this.king_pos].div.className + " checked";
+    };
+
+    /**
+     * Uncheck own king.
+     */
+    this.me_uncheck = function(old_pos) {
+        this.king_checked = false;
+
+        this[this.king_pos].div.className = this[this.king_pos].div.className.replace(/ checked/, "");
+        if (old_pos) this[old_pos].div.className = this[old_pos].div.className.replace(/ checked/, "");
+
+        SOCKET.emit("uncheck", { name: this.name, side: PLAYER_TEAM, old_pos: old_pos });
+    };
+
+    /**
      * Checks if player's king got exposed to enemy.
      *
      * @return Bool.
@@ -294,13 +356,13 @@ function ChessBoard() {
                 //move rook according castling
                 if (!this.h_rook_moved && pos_id[0] === "g") {
                     this.selected = "h" + num;
-                    this.move(col_decrease(this.king_pos[0]) + num);
+                    this.move(col_decrease(this.king_pos[0]) + num, false);
 
                     this.selected = old_selected;
                 }
                 else if (!this.a_rook_moved && pos_id[0] === "c") {
                     this.selected = "a" + num;
-                    this.move(col_increase(this.king_pos[0]) + num);
+                    this.move(col_increase(this.king_pos[0]) + num, false);
 
                     this.selected = old_selected;
                 }
@@ -325,6 +387,20 @@ function ChessBoard() {
     };
 
     /**
+     * Performs enemy move.
+     */
+    this.enemy_move = function(from, to) {
+        var old_pos = this[from];
+        var new_pos = this[to];
+
+        new_pos.team = old_pos.team;
+        new_pos.piece = old_pos.piece;
+        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
+
+        this.reset(from);
+    };
+
+    /**
      * @brief Moves piece to new location.
      *
      * Clear selection and checks for enemy king being checked
@@ -332,8 +408,9 @@ function ChessBoard() {
      * Cancel move if own king is under threat.
      *
      * @param to New location.
+     * @param finished Last move(in case of castling).
      */
-    this.move = function(to) {
+    this.move = function(to, finished=true) {
         var old_pos = this[this.selected];
         var new_pos = this[to];
 
@@ -343,14 +420,28 @@ function ChessBoard() {
             if (old_pos.piece === PIECES.king) this.king_pos = this.selected;
             return;
         }
+        else if (this.king_checked) {
+            this.me_uncheck(this.selected);
+        }
 
         new_pos.team = old_pos.team;
         new_pos.piece = old_pos.piece;
         new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
+
+        SOCKET.emit("move", {
+            name: this.name,
+            side: PLAYER_TEAM,
+            old_pos: this.selected,
+            new_pos: to,
+            finished: finished
+        });
+
         this.is_pawn_promo(new_pos);
         this.is_castling_lost(new_pos);
 
         this.is_enemy_check(to);
+
+        if (finished) this.turn_end();
 
         this.reset(this.selected);
         this.selected = undefined;
@@ -603,6 +694,7 @@ function ChessBoard() {
         function is_empty(pos) {
             return this[pos].team === TEAM.none;
         }
+
         function is_can_castle(pos) {
             return !(pos in set_enemy_moves);
         }
@@ -698,7 +790,7 @@ function ChessBoard() {
  * Must be called once.
  * To reset board use chess_reset function.
  */
-function chess_init() {
+function chess_init(part_name, side) {
     if (BOARD === undefined) {
         BOARD = new ChessBoard();
     }
@@ -735,8 +827,25 @@ function chess_init() {
         BOARD[col2].piece = PIECES.pawn;
     });
 
-    if (PLAYER_TEAM === TEAM.white) BOARD.king_pos = "e2";
-    else BOARD.king_pos = "e7";
+    /* Joined someone's game */
+    if (side) {
+        BOARD.name = part_name;
+        SOCKET.emit("party_join", part_name, side);
+        side_determ(side);
+    }
+}
+
+
+function side_determ(side) {
+    if (side === "black") {
+        PLAYER_TEAM = TEAM.black;
+        BOARD.king_pos = "e8";
+    }
+    else {
+        PLAYER_TEAM = TEAM.white;
+        BOARD.king_pos = "e1";
+    }
+    switch_side();
 }
 
 /**
@@ -756,6 +865,23 @@ function reverse_board() {
     }
 }
 
+
+
+/**
+ * Reverse player side.
+ */
+function switch_side() {
+    if (PLAYER_TEAM === TEAM.white) {
+        document.getElementById("menu_side").value = "White";
+        document.getElementById("menu_team").innerHTML = "WHITE";
+    }
+    else if (PLAYER_TEAM === TEAM.black) {
+        document.getElementById("menu_side").value = "Black";
+        document.getElementById("menu_team").innerHTML = "BLACK";
+        reverse_board();
+    }
+}
+
 /**
  * Cleans game and initialize board anew.
  */
@@ -763,3 +889,94 @@ function reset() {
     BOARD.reset();
     chess_init();
 }
+
+window.onbeforeunload = function() {
+    SOCKET.close();
+};
+
+window.onload = function() {
+    var form = document.getElementById("party_form");
+    if (form) {
+        form.addEventListener("submit", function(evet) {
+            evet.preventDefault();
+
+            var party_name = form.form_name.value;
+            var side = form.form_side.value.toLowerCase();
+            var type = form.form_party_type.value.toLowerCase();
+
+            PLAYER_TEAM = side;
+
+            SOCKET.emit("party_create", party_name, side, type);
+
+            form.btn.disabled = true; //disable until we'll get reply.
+
+            return false;
+        });
+
+        SOCKET.on("create_ok", function() {
+            var name_enc = encodeURIComponent(form.form_name.value);
+            var side_enc = form.form_side.value.toLowerCase();
+
+            BOARD.name = name_enc;
+            //remove form.
+            form = undefined;
+
+            //Modify url to contain information for party restoration on reload.
+            window.history.pushState("game", "Chess.js", "?game=" + name_enc + "&side=" + side_enc);
+            document.body.removeChild(document.body.childNodes[2]);
+
+            var enemy_side_enc;
+            side_determ(side_enc);
+            if (PLAYER_TEAM === TEAM.white) {
+                enemy_side_enc = "black";
+            }
+            else {
+                enemy_side_enc = "white";
+            }
+
+            //Pop-up waiting window
+            document.getElementById('wait').style = "";
+            document.getElementById('wait_ref').href = "/?game=" + name_enc + "&side=" + enemy_side_enc;
+        });
+
+        SOCKET.on("create_fail", function() {
+            form.btn.disabled = false;
+            PLAYER_TEAM = TEAM.none;
+            window.alert("Failed to create party!\nParty with such name is already registered.");
+        });
+    }
+
+    SOCKET.on("joined", function() {
+        document.body.removeChild(document.body.childNodes[2]);
+        document.getElementById('wait').style = "display:none";
+    });
+
+    SOCKET.on("join_ok", function() {
+    });
+
+    SOCKET.on("join_fail", function() {
+        PLAYER_TEAM = TEAM.none;
+        window.alert("Sorry, but you cannot join a game!");
+    });
+
+    SOCKET.on("move", function(move_data) {
+        var from = move_data.old_pos;
+        var to = move_data.new_pos;
+
+        BOARD.enemy_move(from, to);
+
+        if (move_data.finished) BOARD.turn_end();
+    });
+
+    SOCKET.on("check", function() {
+        BOARD.me_checked();
+    });
+
+    SOCKET.on("uncheck", function(old_pos) {
+        BOARD.me_uncheck(old_pos);
+    });
+
+    SOCKET.on("pawn_promo", function(piece, pos) {
+        BOARD.pawn_promo(piece, pos);
+    })
+};

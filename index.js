@@ -1,26 +1,171 @@
 "use strict";
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const util = require('util');
+const express = require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 const PORT = 8080;
 
 app.set('views', './views');
 app.set('view engine', 'pug');
 app.use('/', express.static(__dirname + '/static'));
 
+/* There is only single page.
+ *
+ * Upon first entering user is prompted to create party.
+ *
+ * Finishing that user shall get url for invite
+ * or, if chosen Hotspot, just starts playing.
+ *
+ * After another user has been connected initiate game. */
 app.get('/', function (req, res) {
-    console.log(req.query);
-    res.render("index");
-});
+    var name, side;
+    if (Object.keys(req.query).length) {
+        if (GAMES.is_game(req.query.game) && "side" in req.query) {
+            name = req.query.game;
+            side = req.query.side;
+        }
+        else {
+            res.status(404).render("404");
+            return;
+        }
+    }
 
-app.get('/chess_board', function (req, res) {
-    res.render("chess_board");
+    res.render("index", {
+        party_name: name,
+        party_side: side
+    });
 });
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){
     res.status(404).render("404");
+});
+
+class Games {
+    constructor() {
+        this.inner = {};
+
+        this.enum_side = {
+            7: "black",
+            2: "white"
+        };
+
+        /* Opposite side map.
+         * Returns the name of opposite's side. */
+        this.op_side_map = {
+            white: "black",
+            black: "white"
+        };
+    }
+
+    /* Creates game upon user request.
+     *
+     * @return true On success.
+     *         false If game with such name exists. */
+    create(name, type, side, socket) {
+        if (name in this.inner) return false;
+
+        this.inner[name] = { type: type };
+        this.inner[name][side] = socket;
+        return true;
+    }
+
+    /* Adds user to existing game. */
+    add_user(name, side, socket) {
+        if (!(name in this.inner) || side in this.inner[name]) return false;
+
+        this.inner[name][side] = socket;
+        return true;
+    }
+
+    /* Tests if game exists */
+    is_game(name) {
+        return name in this.inner;
+    }
+
+    /* Gets game if any. */
+    get_game(name) {
+        return this.inner[name];
+    }
+
+    /* Gets socket of another's side */
+    get_another_socket(name, cur_side) {
+        if (!(name in this.inner)) {
+            throw util.format("get_another_socket(name=%s, cur_side=%s): No such game",
+                              name, cur_side);
+        }
+
+        return this.inner[name][this.op_side_map[cur_side]];
+    }
+}
+
+const GAMES = new Games();
+
+io.on('connection', function(socket) {
+    /* Registers a new game.
+     *
+     * @param name Name of the party.
+     * @param side The chess's side which is reserved for creator: white or black.
+     * @param type The type of party: public, private, hotspot
+     */
+    socket.on("party_create", function(name, side, type) {
+        if (GAMES.create(name, type, side, socket)) {
+            socket.emit("create_ok");
+        }
+        else {
+            socket.emit("create_fail");
+        }
+    });
+
+    /* Handles user's request to join game.
+     */
+    socket.on("party_join", function(name, side) {
+        if (GAMES.add_user(name, side, socket)) {
+            socket.emit("join_ok");
+            GAMES.get_another_socket(name, side).emit("joined");
+        }
+        else {
+            socket.emit("join_fail");
+        }
+    });
+
+    socket.on("move", function(data) {
+        var game_name = data.name;
+        var move_side = GAMES.enum_side[data.side];
+
+        GAMES.get_another_socket(game_name, move_side)
+             .emit("move", {
+                 side: data.side,
+                 old_pos: data.old_pos,
+                 new_pos: data.new_pos,
+                 finished: data.finished
+             });
+    });
+
+    socket.on("check", function(data) {
+        var game_name = data.name;
+        var checked_by = GAMES.enum_side[data.side];
+
+        GAMES.get_another_socket(game_name, checked_by)
+             .emit("check");
+    });
+
+    socket.on("uncheck", function(data) {
+        var game_name = data.name;
+        var checked_by = GAMES.enum_side[data.side];
+
+        GAMES.get_another_socket(game_name, checked_by)
+             .emit("uncheck", data.old_pos);
+    });
+
+    socket.on("pawn_promo", function(data) {
+        var game_name = data.name;
+        var checked_by = GAMES.enum_side[data.side];
+
+        GAMES.get_another_socket(game_name, checked_by)
+             .emit("pawn_promo", data.new_piece, data.pos);
+    });
 });
 
 http.listen(PORT, function () {

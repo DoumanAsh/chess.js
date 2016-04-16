@@ -47,6 +47,20 @@ div.overlay {
     z-index: 1;
 }
 
+/* Informational window */
+div#wait {
+    animation: fly-in 1s;
+    width: 25rem;
+    position: absolute;
+    left: 40%; top: 40%;
+    background-color: #fff;
+    padding: 0.5rem;
+    border-radius: 0.2rem;
+    box-shadow: 2px 2px 5px #000;
+    z-index: 3;
+    text-align: center;
+}
+
 /* Party creation form */
 form#party_form {
     animation: fly-in 1s;

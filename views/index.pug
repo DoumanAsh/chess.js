@@ -1,25 +1,31 @@
 include ./head.pug
 
+script(src="/socket.io/socket.io.js")
 script(src="/js/main.js")
 
 body
-    div(class="overlay")
-    form(id="party_form")
-        div(id="party_form_cap", style="text-align: center")= "Create a chess party"
-        input(id="form_name", type="text", placeholder="Name", required)
-        div(style="display:flex; justify-content: space-between; margin-top: 0.5rem; margin-left: 0.5rem; margin-right: 0.5rem;")
-            div(style="display:flex")
-                p(style="margin-right: 1rem")= "Side:"
-                select(id="form_side", style="width: 4rem")
-                    option= "White"
-                    option= "Black"
-            div(style="display:flex")
-                p(style="margin-right: 1rem")= "Party type:"
-                select(id="form_party_type", style="width: 4rem")
-                    option= "Private"
-                    option= "Public"
-                    option= "Hotspot"
-        button(type="submit")= "GO"
+    if !party_name
+        form(id="party_form")
+            div(id="party_form_cap", style="text-align: center")= "Create a chess party"
+            input(id="form_name", type="text", placeholder="Name", required)
+            div(style="display:flex; justify-content: space-between; margin-top: 0.5rem; margin-left: 0.5rem; margin-right: 0.5rem;")
+                div(style="display:flex")
+                    p(style="margin-right: 1rem")= "Side:"
+                    select(id="form_side", style="width: 4rem")
+                        option= "White"
+                        option= "Black"
+                div(style="display:flex")
+                    p(style="margin-right: 1rem")= "Party type:"
+                    select(id="form_party_type", style="width: 4rem")
+                        option= "Private"
+                        option= "Public"
+                        option= "Hotspot"
+            button(id="btn", type="submit")= "GO"
+        div(id="overlay", class="overlay")
+    div(id="wait", style="display:none")
+        p= "Waiting for someone to connect..."
+        p= "Use your link below to invite your friend for a game"
+        a(id="wait_ref", href="/404")= "Link"
     div(id="chess_board", class="chess_board")
         - for (var i = 8; i > 0; i--)
             if i % 2
@@ -45,7 +51,7 @@ body
                 p(class="menu_text")= "Turn"
         tr
             td
-                select(style="width: 100%", onchange="reverse_board()")
+                select(id="menu_side", style="width: 100%", onchange="reverse_board()")
                     option= "White"
                     option= "Black"
             td
@@ -55,8 +61,8 @@ body
                     option= "Bishop"
                     option= "Knight"
             td
-                div(class="menux_box")= "WHITE"
+                div(id="menu_team", class="menux_box")= "WHITE"
             td
-                div(class="menux_box")= "WHITE"
+                div(id="menu_turn", class="menux_box")= "WHITE"
     script.
-        chess_init()
+        chess_init("#{party_name}", "#{party_side}")
