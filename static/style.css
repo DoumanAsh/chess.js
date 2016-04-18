@@ -170,49 +170,61 @@ form#party_form button:hover {
 }
 
 .black_pawn {
+    cursor: pointer;
     background-image: url("/img/pawn_black.png");
 }
 
 .black_rook {
+    cursor: pointer;
     background-image: url("/img/rook_black.png");
 }
 
 .black_bishop {
+    cursor: pointer;
     background-image: url("/img/bishop_black.png");
 }
 
 .black_knight {
+    cursor: pointer;
     background-image: url("/img/knight_black.png");
 }
 
 .black_queen {
+    cursor: pointer;
     background-image: url("/img/queen_black.png");
 }
 
 .black_king {
+    cursor: pointer;
     background-image: url("/img/king_black.png");
 }
 
 .white_pawn {
+    cursor: pointer;
     background-image: url("/img/pawn_white.png");
 }
 
 .white_rook {
+    cursor: pointer;
     background-image: url("/img/rook_white.png");
 }
 
 .white_bishop {
+    cursor: pointer;
     background-image: url("/img/bishop_white.png");
 }
 
 .white_knight {
+    cursor: pointer;
     background-image: url("/img/knight_white.png");
 }
 
 .white_queen {
+    cursor: pointer;
     background-image: url("/img/queen_white.png");
 }
 
 .white_king {
+    cursor: pointer;
     background-image: url("/img/king_white.png");
 }
