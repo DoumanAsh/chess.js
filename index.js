@@ -198,6 +198,8 @@ io.on('connection', function(socket) {
     });
 
     socket.on('disconnect', function() {
+        if (socket.chess_name === undefined) return;
+
         GAMES.user_discon(socket.chess_name, socket.chess_side);
         var opponent_socket = GAMES.get_another_socket(socket.chess_name, socket.chess_side);
 
