@@ -12,19 +12,20 @@ This time around we have simple multiplayer chess game.
 
 ## TODO
 
-- [x] Chess rules implementation
+- [ ] Chess rules implementation
     - [x] Basic moves.
     - [x] Castling.
     - [x] Pawn promotion.
     - [x] En passant.
     - [x] Marking checked king.
     - [ ] Check for check-mate.
-- [x] Implement shared games
+- [ ] Implement shared games
     - [x] Invite-based multiplayer.
     - [x] Synchronization upon reconnect(if both are disconnected then game is lost).
     - [ ] Public games with random enemies in FIFO.
     - [ ] Hotseat.
 - [ ] UI
+    - [x] General
     - [ ] Game title
     - [ ] Counter of eaten figures.
     - [ ] Timer.
