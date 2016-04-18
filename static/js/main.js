@@ -975,6 +975,41 @@ function side_determ(side) {
 }
 
 /**
+ * Reverses rows nums for board wrapper.
+ */
+function reverse_board_wrapper() {
+    //TODO: this is a way too awful code. Improve it!
+    var board_wrap = document.getElementById("board_wrap").childNodes[0];
+    var nodes = board_wrap.childNodes;
+    var row_arr, col_arr;
+    var idx;
+
+    if (nodes[1].childNodes[0].innerHTML === "8") {
+        nodes[1].childNodes[0].innerHTML = "1";
+        nodes[1].childNodes[2].innerHTML = "1";
+        row_arr = ["2", "3", "4", "5", "6", "7", "8"];
+        col_arr = ["h", "g", "f", "e", "d", "c", "b", "a"];
+    }
+    else {
+        nodes[1].childNodes[0].innerHTML = "8";
+        nodes[1].childNodes[2].innerHTML = "8";
+        row_arr = ["7", "6", "5", "4", "3", "2", "1"];
+        col_arr = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    }
+
+    for (idx = 2; idx < nodes.length - 1; idx++) {
+        var row = row_arr[idx-2];
+        nodes[idx].childNodes[0].innerHTML = row;
+        nodes[idx].childNodes[1].innerHTML = row;
+    }
+
+    for (idx = 0; idx < col_arr.length; idx++) {
+        nodes[0].childNodes[idx+1].innerHTML = col_arr[idx];
+        nodes[nodes.length-1].childNodes[idx+1].innerHTML = col_arr[idx];
+    }
+}
+
+/**
  * Reverse chess_board
  */
 function reverse_board() {
@@ -989,7 +1024,10 @@ function reverse_board() {
     for (idx = 0; idx < nodes.length; idx++) {
         chess_board.appendChild(array_nodes[idx]);
     }
+
+    reverse_board_wrapper();
 }
+
 
 
 

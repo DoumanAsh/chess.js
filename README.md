@@ -29,5 +29,5 @@ This time around we have simple multiplayer chess game.
     - [ ] Game title
     - [ ] Counter of eaten figures.
     - [ ] Timer.
-    - [ ] Add row\column names
+    - [x] Add row\column names
 

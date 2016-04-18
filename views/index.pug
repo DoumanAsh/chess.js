@@ -29,18 +29,38 @@ body
         p= "Waiting for someone to connect..."
         p= "Use your link below to invite your friend for a game"
         a(id="wait_ref", href="/404")= "Link"
-    div(id="chess_board", class="chess_board")
-        - for (var i = 8; i > 0; i--)
-            if i % 2
-                - var cell = "black"
-            else
-                - var cell = "white"
+    table(id="board_wrap", class="board")
+        tr
+            td= ""
             each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
-                div(id=col+i, class=cell)= col+i
-                if cell === "white"
-                    - cell = "black"
-                else
-                    - cell = "white"
+                td(style="width:70px")= col
+            td= ""
+        tr
+            td= "8"
+            td(colspan="8", rowspan="8")
+                div(id="chess_board", class="chess_board")
+                    - for (var i = 8; i > 0; i--)
+                        if i % 2
+                            - var cell = "black"
+                        else
+                            - var cell = "white"
+                        each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
+                            div(id=col+i, class=cell)
+                            if cell === "white"
+                                - cell = "black"
+                            else
+                                - cell = "white"
+            td= "8"
+        - for (var i = 7; i > 0; i--)
+            tr
+                td(style="width: 24px")= i
+                td(style="width: 24px")= i
+        tr
+            td= ""
+            each col in ["a", "b", "c", "d", "e", "f", "g", "h"]
+                td(style="width:70px")= col
+            td= ""
+
 
     table(id="menu")
         tr
