@@ -24,4 +24,9 @@ This time around we have simple multiplayer chess game.
     - [x] Synchronization upon reconnect(if both are disconnected then game is lost).
     - [ ] Public games with random enemies in FIFO.
     - [ ] Hotseat.
+- [ ] UI
+    - [ ] Game title
+    - [ ] Counter of eaten figures.
+    - [ ] Timer.
+    - [ ] Add row\column names
 
