@@ -7,7 +7,7 @@ body
     if !party_name
         form(id="party_form")
             div(id="party_form_cap", style="text-align: center")= "Create a chess party"
-            input(id="form_name", type="text", placeholder="Name", required)
+            input(id="form_name", type="text", placeholder="Game Name", required)
             div(style="display:flex; justify-content: space-between; margin-top: 0.5rem; margin-left: 0.5rem; margin-right: 0.5rem;")
                 div(style="display:flex")
                     p(style="margin-right: 1rem")= "Side:"
@@ -48,7 +48,7 @@ body
             th
                 p(class="menu_text")= "Pawn promotion"
             th
-                p(class="menu_text")= "Team"
+                p(class="menu_text")= "Army"
             th
                 p(class="menu_text")= "Turn"
         tr

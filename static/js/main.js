@@ -1023,6 +1023,7 @@ window.onload = function() {
     var form = document.getElementById("party_form");
 
     if (form) {
+        form.btn.disabled = false; //In case of history move back
         form.addEventListener("submit", function(evet) {
             evet.preventDefault();
 
