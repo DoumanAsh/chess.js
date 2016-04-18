@@ -131,7 +131,7 @@ io.on('connection', function(socket) {
      */
     socket.on("party_create", function(name, side, type) {
         if (GAMES.create(name, type, side, socket)) {
-            socket.emit("create_ok");
+            socket.emit("create_ok", name, side);
         }
         else {
             socket.emit("create_fail");

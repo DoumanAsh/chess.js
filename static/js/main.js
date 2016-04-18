@@ -132,6 +132,7 @@ function ChessBoard() {
     };
 
     this.name = undefined;
+    this.side = undefined; /* text representation of team */
     this.turn = TEAM.white;
     this.selected = undefined;
     this.selected_move_area = [];
@@ -954,6 +955,7 @@ function chess_init(part_name, side) {
     /* Joined someone's game */
     if (side) {
         BOARD.name = part_name;
+        BOARD.side = side;
         SOCKET.emit("party_join", part_name, side);
         side_determ(side);
     }
@@ -1018,8 +1020,23 @@ window.onbeforeunload = function() {
     SOCKET.close();
 };
 
+/**
+ * Gets random int between min/max inclusively.
+ */
+function get_rand_int(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
+ * Gets side to play by simply picking random between (1,10)
+ */
+function get_random_side() {
+    if (get_rand_int(1, 10) > 5) return "white";
+    else return "black";
+}
+
 window.onload = function() {
-    var connected = true;
+    var op_connected = true;
     var form = document.getElementById("party_form");
 
     if (form) {
@@ -1027,9 +1044,11 @@ window.onload = function() {
         form.addEventListener("submit", function(evet) {
             evet.preventDefault();
 
-            var party_name = form.form_name.value;
+            var party_name = encodeURIComponent(form.form_name.value);
             var side = form.form_side.value.toLowerCase();
             var type = form.form_party_type.value.toLowerCase();
+
+            if (side === "random") side = get_random_side();
 
             PLAYER_TEAM = side;
 
@@ -1040,11 +1059,9 @@ window.onload = function() {
             return false;
         });
 
-        SOCKET.on("create_ok", function() {
-            var name_enc = encodeURIComponent(form.form_name.value);
-            var side_enc = form.form_side.value.toLowerCase();
-
+        SOCKET.on("create_ok", function(name_enc, side_enc) {
             BOARD.name = name_enc;
+            BOARD.side = side_enc;
             //remove form.
             form = undefined;
 
@@ -1077,13 +1094,15 @@ window.onload = function() {
         document.getElementById("overlay").style = "display: none";
         document.getElementById('wait').style = "display:none";
 
-        if (!connected) {
-            connected = true;
+        if (!op_connected) {
+            op_connected = true;
             BOARD.sync_game(SOCKET);
         }
     });
 
     SOCKET.on("join_ok", function() {
+        document.getElementById("overlay").style = "display: none";
+        document.getElementById('wait').style = "display:none";
     });
 
     SOCKET.on("join_fail", function() {
@@ -1133,6 +1152,8 @@ window.onload = function() {
         var wait_pop = document.getElementById('wait');
 
         wait_pop.childNodes[0].innerHTML = "Your opponent has been disconnected...";
+        wait_pop.childNodes[1].innerHTML = "Use your link below to invite your friend for a game";
+        wait_pop.childNodes[2].innerHTML = "Link";
         if (PLAYER_TEAM === TEAM.white) {
             wait_pop.childNodes[2].href = "/?game=" + BOARD.name + "&side=black";
         }
@@ -1142,6 +1163,19 @@ window.onload = function() {
 
         document.getElementById("overlay").style = "";
         wait_pop.style = "";
-        connected = false;
+        op_connected = false;
+    });
+
+    SOCKET.on("connect", function() {
+        if (BOARD.name) {
+            SOCKET.emit("party_join", BOARD.name, BOARD.side);
+        }
+    });
+
+    SOCKET.on("disconnect", function() {
+        var wait_pop = document.getElementById('wait');
+        wait_pop.childNodes[0].innerHTML = "Connection to server has been lost...";
+        wait_pop.childNodes[1].innerHTML = "Please wait a bit or try to contact the one who messed it.";
+        wait_pop.childNodes[2].innerHTML = "";
     });
 };
