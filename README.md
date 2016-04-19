@@ -26,7 +26,7 @@ This time around we have simple multiplayer chess game.
     - [ ] Hotseat.
 - [ ] UI
     - [x] General
-    - [ ] Game title
+    - [x] Game title
     - [ ] Counter of eaten figures.
     - [ ] Timer.
     - [x] Add row\column names

@@ -116,6 +116,16 @@ form#party_form button:hover {
     outline: 0;
 }
 
+/* Game title*/
+p#party_name {
+    text-align: center;
+    width: 100%;
+    margin: auto;
+    margin-top: 15px;
+    font-size: 32px;
+    height: 2rem;
+}
+
 /* Menu box */
 #menu {
     margin: auto;
@@ -139,7 +149,7 @@ form#party_form button:hover {
 /* Chess board part */
 .board {
     margin: auto;
-    margin-top: 25px;
+    margin-top: 15px;
     background-color: #4FC5B0;
     border: 7px double #424242;
 }

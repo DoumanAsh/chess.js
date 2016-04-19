@@ -143,6 +143,11 @@ function ChessBoard() {
     this.king_checked = false;
     this.en_passant_to = undefined;
 
+    this.set_name = function(name) {
+        this.name = name;
+        document.getElementById("party_name").innerHTML = name;
+    };
+
     //Initialize board
     this.iterate(function(me, id) {
         me[id] = {
@@ -954,7 +959,7 @@ function chess_init(part_name, side) {
 
     /* Joined someone's game */
     if (side) {
-        BOARD.name = part_name;
+        BOARD.set_name(part_name);
         BOARD.side = side;
         SOCKET.emit("party_join", part_name, side);
         side_determ(side);
@@ -1098,7 +1103,7 @@ window.onload = function() {
         });
 
         SOCKET.on("create_ok", function(name_enc, side_enc) {
-            BOARD.name = name_enc;
+            BOARD.set_name(name_enc);
             BOARD.side = side_enc;
             //remove form.
             form = undefined;
