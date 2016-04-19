@@ -146,7 +146,10 @@ io.on('connection', function(socket) {
             GAMES.get_another_socket(name, side).emit("joined");
         }
         else {
-            socket.emit("join_fail");
+            /* There is some buggy race  condition when you refresh page
+             * So check if there is double request from the same socket.
+             * TODO: Get rid of this double connect */
+            if (socket.chess_side !== side) socket.emit("join_fail");
         }
     });
 

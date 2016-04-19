@@ -145,7 +145,7 @@ function ChessBoard() {
 
     this.set_name = function(name) {
         this.name = name;
-        document.getElementById("party_name").innerHTML = name;
+        document.getElementById("party_name").innerHTML = decodeURIComponent(name);
     };
 
     //Initialize board
