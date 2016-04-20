@@ -7,7 +7,7 @@ before_script:
     - npm install --dev
     - npm install coveralls
 
-scrpt:
+script:
     - npm test
     - npm run cov
     - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js

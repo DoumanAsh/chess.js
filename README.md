@@ -1,5 +1,8 @@
 # Chess.js
 
+[![Build Status](https://secure.travis-ci.org/DoumanAsh/chess.js.png)](http://travis-ci.org/DoumanAsh/chess.js)
+[![Coverage Status](https://coveralls.io/repos/github/DoumanAsh/chess.js/badge.svg?branch=master)](https://coveralls.io/github/DoumanAsh/chess.js?branch=master)
+
 My second learning attempt of bundle Node.js/express.js/socket.io
 
 This time around we have simple multiplayer chess game.
