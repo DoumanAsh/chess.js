@@ -30,4 +30,9 @@ This time around we have simple multiplayer chess game.
     - [ ] Counter of eaten figures.
     - [ ] Timer.
     - [x] Add row\column names
+- [ ] Tests
+    - [ ] Server side
+        - [ ] Server itself
+        - [x] Games Class
+    - [ ] Client side
 

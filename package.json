@@ -1,25 +1,29 @@
 {
-    "name": "chess.js",
-    "version": "1.0.0",
-    "description": "Simple chess server",
-    "main": "index.js",
-    "scripts": {
-        "test": "node test",
-        "start": "node --use-strict index.js",
-        "lint": "jshint index.js src/ static/js || true"
-    },
-    "keywords": [
-        "chess"
-    ],
-    "repository" : {
-        "type": "git",
-        "url" : "https://github.com/DoumanAsh/chess.js"
-    },
-    "author": "Douman",
-    "license": "MIT",
-    "dependencies": {
-        "express": "^4.13.4",
-        "pug": "^2.0.0-alpha1",
-        "socket.io": "^1.4.5"
-    }
+  "name": "chess.js",
+  "version": "1.0.0",
+  "description": "Simple chess server",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --use_strict",
+    "start": "node --use-strict index.js",
+    "lint": "jshint index.js src/ static/js || true"
+  },
+  "keywords": [
+    "chess"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DoumanAsh/chess.js"
+  },
+  "author": "Douman",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.13.4",
+    "pug": "^2.0.0-alpha1",
+    "socket.io": "^1.4.5"
+  },
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*"
+  }
 }
