@@ -6,7 +6,8 @@
   "scripts": {
     "test": "mocha --use_strict",
     "start": "node --use-strict index.js",
-    "lint": "jshint index.js src/ static/js || true"
+    "lint": "jshint index.js src/ static/js || true",
+    "cov": " node --use_strict ./node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha"
   },
   "keywords": [
     "chess"
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "chai": "*",
+    "istanbul": "^0.4.3",
     "mocha": "*"
   }
 }

@@ -1,4 +1,4 @@
-'use script';
+"use script";
 const util = require("util");
 
 /* Class to hold games */
