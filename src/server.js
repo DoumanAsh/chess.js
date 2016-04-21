@@ -18,6 +18,7 @@ app.use('/', express.static(__dirname + '/../static'));
  * After another user has been connected initiate game. */
 app.get('/', function (req, res) {
     var name, side;
+    /* Example: <root>/?game=<name>&side=<side> */
     if (Object.keys(req.query).length) {
         if (GAMES.is_game(req.query.game) && "side" in req.query) {
             name = req.query.game;
@@ -29,7 +30,7 @@ app.get('/', function (req, res) {
         }
     }
 
-    res.render("index", {
+    res.status(200).render("index", {
         party_name: name,
         party_side: side
     });
