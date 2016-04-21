@@ -16,7 +16,7 @@ var TEAM = {
 
 var BOARD;
 var PLAYER_TEAM = TEAM.none;
-var SOCKET = io();
+var SOCKET;
 
 /**
  * Column/letter decrease by one
@@ -963,7 +963,6 @@ function chess_init(part_name, side) {
     if (side) {
         BOARD.set_name(part_name);
         BOARD.side = side;
-        SOCKET.emit("party_join", part_name, side);
         side_determ(side);
     }
 }
@@ -1081,6 +1080,7 @@ function get_random_side() {
 }
 
 window.onload = function() {
+    SOCKET = io();
     var op_connected = true;
     var form = document.getElementById("party_form");
 
