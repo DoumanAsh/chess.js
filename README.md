@@ -34,8 +34,8 @@ This time around we have simple multiplayer chess game.
     - [ ] Timer.
     - [x] Add row\column names
 - [ ] Tests
-    - [ ] Server side
-        - [ ] Server itself
+    - [x] Server side
+        - [x] Server itself
         - [x] Games Class
     - [ ] Client side
 

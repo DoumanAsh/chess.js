@@ -1,9 +1,11 @@
 "use strict";
 const assert = require('assert');
+const util = require('util');
 const io = require('socket.io-client');
 
 describe('Server:', function() {
     var server = require("./../src/server.js");
+    var http = require("http");
     var PORT = 5000;
     var URL = 'http://localhost:5000';
     var client;
@@ -220,6 +222,180 @@ describe('Server:', function() {
         });
     });
 
+    it('Routing check 202: Root', function(done) {
+        var options = {
+            port: PORT,
+            path: "/",
+            method: 'GET',
+        };
+
+        var req = http.request(options);
+        req.end();
+
+        req.on("response", function(res) {
+            if (res.statusCode === 200) done();
+            else done(new Error("Wrong status code"));
+        });
+
+        req.on('error', function(error) {
+            done(new Error("Error happened during routing check"));
+        });
+    });
+
+    it('Routing check 404: After game deletion', function(done) {
+        var expect = test_party;
+        var checker = function() {
+            var options = {
+                port: PORT,
+                path: util.format("/?game=%s&side=%s", test_party.name, test_party.side),
+                method: 'GET',
+            };
+
+            var req = http.request(options);
+            req.end();
+
+            req.on("response", function(res) {
+                if (res.statusCode === 404) done();
+                else done(new Error("Wrong status code"));
+            });
+
+            req.on('error', function(error) {
+                done(new Error("Error happened during routing check"));
+            });
+        };
+
+        client = io.connect(URL);
+
+        client.on('connect', function(data) {
+            client.emit("party_create", expect.name, expect.side, expect.type);
+        });
+
+        client.on("create_ok", function(name, side) {
+            client.disconnect();
+            checker();
+        });
+
+        client.on("create_fail", function(name, side) {
+            done(new Error("Create party failed"));
+        });
+
+    });
+
+    it('Routing check 404: Go wrong with existing game', function(done) {
+        var expect = test_party;
+
+        var checker_second = function() {
+            var options = {
+                port: PORT,
+                path: util.format("/?game=%s&side=%s", "testik", test_party.side),
+                method: 'GET',
+            };
+
+            var req = http.request(options);
+            req.end();
+
+            req.on("response", function(res) {
+                if (res.statusCode === 404) done();
+                else done(new Error("second: Wrong status code"));
+            });
+
+            req.on('error', function(error) {
+                done(new Error("second: Error happened during routing check"));
+            });
+        };
+
+        var checker_first = function() {
+            var options = {
+                port: PORT,
+                path: "/chess",
+                method: 'GET',
+            };
+
+            var req = http.request(options);
+            req.end();
+
+            req.on("response", function(res) {
+                if (res.statusCode === 404) checker_second();
+                else done(new Error("first: Wrong status code"));
+            });
+
+            req.on('error', function(error) {
+                done(new Error("first: Error happened during routing check"));
+            });
+        };
+
+        client = io.connect(URL);
+
+        client.on('connect', function(data) {
+            client.emit("party_create", expect.name, expect.side, expect.type);
+        });
+
+        client.on("create_ok", function(name, side) {
+            checker_first();
+        });
+
+        client.on("create_fail", function(name, side) {
+            done(new Error("Create party failed"));
+        });
+    });
+
+    it('Routing check 200: Go right with existing game', function(done) {
+        var expect = test_party;
+
+        var checker_second = function() {
+            var options = {
+                port: PORT,
+                path: util.format("/?game=%s&side=%s", test_join.name, test_join.side),
+                method: 'GET',
+            };
+
+            var req = http.request(options);
+            req.end();
+
+            req.on("response", function(res) {
+                if (res.statusCode === 200) done();
+                else done(new Error("second: Wrong status code"));
+            });
+
+            req.on('error', function(error) {
+                done(new Error("second: Error happened during routing check"));
+            });
+        };
+
+        var checker_first = function() {
+            var options = {
+                port: PORT,
+                path: util.format("/?game=%s&side=%s1", test_party.name, test_party.side),
+                method: 'GET',
+            };
+
+            var req = http.request(options);
+            req.end();
+
+            req.on("response", function(res) {
+                if (res.statusCode === 200) checker_second();
+                else done(new Error("first: Wrong status code"));
+            });
+
+            req.on('error', function(error) {
+                done(new Error("first: Error happened during routing check"));
+            });
+        };
+
+        client = io.connect(URL);
+
+        client.on('connect', function(data) {
+            client.emit("party_create", expect.name, expect.side, expect.type);
+        });
+
+        client.on("create_ok", function(name, side) {
+            checker_first();
+        });
+
+        client.on("create_fail", function(name, side) {
+            done(new Error("Create party failed"));
+        });
+    });
 
 });
 
