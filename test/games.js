@@ -1,3 +1,4 @@
+"use strict";
 const assert = require('assert');
 const util = require("util");
 
@@ -29,7 +30,7 @@ describe('Games class:', function() {
         });
 
         it('Negative op_side_map', function() {
-            assert.equal(GAMES.op_side_map["whit"], undefined);
+            assert.equal(GAMES.op_side_map.whit, undefined);
         });
     });
 
