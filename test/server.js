@@ -222,15 +222,18 @@ describe('Server:', function() {
         });
     });
 
-    it('Routing check 202: Root', function(done) {
+    var http_request = function(path) {
         var options = {
             port: PORT,
-            path: "/",
+            path: path,
             method: 'GET',
         };
 
-        var req = http.request(options);
-        req.end();
+        return http.request(options);
+    };
+
+    it('Routing check 202: Root', function(done) {
+        var req = http_request("/");
 
         req.on("response", function(res) {
             if (res.statusCode === 200) done();
@@ -240,19 +243,14 @@ describe('Server:', function() {
         req.on('error', function(error) {
             done(new Error("Error happened during routing check"));
         });
+
+        req.end();
     });
 
     it('Routing check 404: After game deletion', function(done) {
         var expect = test_party;
         var checker = function() {
-            var options = {
-                port: PORT,
-                path: util.format("/?game=%s&side=%s", test_party.name, test_party.side),
-                method: 'GET',
-            };
-
-            var req = http.request(options);
-            req.end();
+            var req = http_request(util.format("/?game=%s&side=%s", test_party.name, test_party.side));
 
             req.on("response", function(res) {
                 if (res.statusCode === 404) done();
@@ -262,6 +260,8 @@ describe('Server:', function() {
             req.on('error', function(error) {
                 done(new Error("Error happened during routing check"));
             });
+
+            req.end();
         };
 
         client = io.connect(URL);
@@ -285,14 +285,7 @@ describe('Server:', function() {
         var expect = test_party;
 
         var checker_second = function() {
-            var options = {
-                port: PORT,
-                path: util.format("/?game=%s&side=%s", "testik", test_party.side),
-                method: 'GET',
-            };
-
-            var req = http.request(options);
-            req.end();
+            var req = http_request(util.format("/?game=%s&side=%s", "testik", test_party.side));
 
             req.on("response", function(res) {
                 if (res.statusCode === 404) done();
@@ -302,17 +295,12 @@ describe('Server:', function() {
             req.on('error', function(error) {
                 done(new Error("second: Error happened during routing check"));
             });
+
+            req.end();
         };
 
         var checker_first = function() {
-            var options = {
-                port: PORT,
-                path: "/chess",
-                method: 'GET',
-            };
-
-            var req = http.request(options);
-            req.end();
+            var req = http_request("/chess");
 
             req.on("response", function(res) {
                 if (res.statusCode === 404) checker_second();
@@ -322,6 +310,8 @@ describe('Server:', function() {
             req.on('error', function(error) {
                 done(new Error("first: Error happened during routing check"));
             });
+
+            req.end();
         };
 
         client = io.connect(URL);
@@ -343,14 +333,7 @@ describe('Server:', function() {
         var expect = test_party;
 
         var checker_second = function() {
-            var options = {
-                port: PORT,
-                path: util.format("/?game=%s&side=%s", test_join.name, test_join.side),
-                method: 'GET',
-            };
-
-            var req = http.request(options);
-            req.end();
+            var req = http_request(util.format("/?game=%s&side=%s", test_join.name, test_join.side));
 
             req.on("response", function(res) {
                 if (res.statusCode === 200) done();
@@ -360,17 +343,12 @@ describe('Server:', function() {
             req.on('error', function(error) {
                 done(new Error("second: Error happened during routing check"));
             });
+
+            req.end();
         };
 
         var checker_first = function() {
-            var options = {
-                port: PORT,
-                path: util.format("/?game=%s&side=%s1", test_party.name, test_party.side),
-                method: 'GET',
-            };
-
-            var req = http.request(options);
-            req.end();
+            var req = http_request(util.format("/?game=%s&side=%s1", test_party.name, test_party.side));
 
             req.on("response", function(res) {
                 if (res.statusCode === 200) checker_second();
@@ -380,6 +358,8 @@ describe('Server:', function() {
             req.on('error', function(error) {
                 done(new Error("first: Error happened during routing check"));
             });
+
+            req.end();
         };
 
         client = io.connect(URL);
