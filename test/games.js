@@ -1,4 +1,4 @@
-const assert = require('chai').assert;
+const assert = require('assert');
 const util = require("util");
 
 describe('Games class:', function() {
@@ -121,18 +121,18 @@ describe('Games class:', function() {
 
         });
 
-        /*
-        JFYI: it might fail in strict mode on older chai libraries
         it('Get another socket Negative', function() {
             var throw_fn = function() {
                 GAMES.get_another_socket(new_game_data.name, new_game_data.side);
             };
 
-            var expect_msg = util.format("get_another_socket(name=%s, cur_side=%s): No such game", new_game_data.name, new_game_data.side);
+            var expected_fn = function(error) {
+                var expect_msg = util.format("get_another_socket(name=%s, cur_side=%s): No such game", new_game_data.name, new_game_data.side);
+                return error === expect_msg;
+            };
 
-            assert.throws(throw_fn, expect_msg);
+            assert.throws(throw_fn, expected_fn);
         });
-        */
 
         it('Create game Negative', function() {
             new_game();

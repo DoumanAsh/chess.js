@@ -536,7 +536,9 @@ function ChessBoard() {
      * @param to New location.
      * @param finished Last move(in case of castling).
      */
-    this.move = function(to, finished=true) {
+    this.move = function(to, finished) {
+        if (finished === undefined) finished = true;
+
         var old_pos = this[this.selected];
         var new_pos = this[to];
 

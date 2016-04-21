@@ -7,7 +7,7 @@
     "test": "mocha --use_strict",
     "start": "node --use-strict index.js",
     "lint": "jshint index.js src/ static/js || true",
-    "cov": " node --use_strict ./node_modules/istanbul/lib/cli.js cover --preload-sources node_modules/mocha/bin/_mocha"
+    "cov": " node --use_strict ./node_modules/istanbul/lib/cli.js cover --include-all-sources node_modules/mocha/bin/_mocha"
   },
   "keywords": [
     "chess"
@@ -24,8 +24,7 @@
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
-    "chai": "*",
-    "istanbul": "^0.4.3",
+    "istanbul": "*",
     "mocha": "*"
   }
 }
