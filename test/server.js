@@ -52,7 +52,7 @@ describe('Server:', function() {
 
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", expect.name, expect.side, expect.type);
         });
 
@@ -67,7 +67,7 @@ describe('Server:', function() {
             }
         });
 
-        client.on("create_fail", function(name, side) {
+        client.on("create_fail", function() {
             done(new Error("Create party failed"));
         });
     });
@@ -75,14 +75,14 @@ describe('Server:', function() {
     it('Party join', function(done) {
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", test_party.name, test_party.side, test_party.type);
         });
 
-        client.on("create_ok", function(name, side) {
+        client.on("create_ok", function() {
             var client_join = io.connect(URL);
 
-            client_join.on('connect', function(data) {
+            client_join.on('connect', function() {
                 client_join.emit("party_join", test_join.name, test_join.side);
             });
 
@@ -106,14 +106,14 @@ describe('Server:', function() {
     it('Party the same join Negative', function(done) {
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", test_party.name, test_party.side, test_party.type);
         });
 
-        client.on("create_ok", function(name, side) {
+        client.on("create_ok", function() {
             var client_join = io.connect(URL);
 
-            client_join.on('connect', function(data) {
+            client_join.on('connect', function() {
                 client_join.emit("party_join", test_party.name, test_party.side);
             });
 
@@ -143,15 +143,15 @@ describe('Server:', function() {
 
         client = io.connect(URL);
 
-        var create_ok_second = function(name, side) {
+        var create_ok_second = function() {
             done(new Error("Second create ok is not supposed to happen"));
         };
 
-        var create_fail_second = function(name, side) {
+        var create_fail_second = function() {
             done();
         };
 
-        var create_ok_first = function(name, side) {
+        var create_ok_first = function() {
             client.removeAllListeners("create_ok");
             client.removeAllListeners("create_fail");
 
@@ -165,7 +165,7 @@ describe('Server:', function() {
             done(new Error("First create party failed"));
         };
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", expect.name, expect.side, expect.type);
         });
 
@@ -180,7 +180,7 @@ describe('Server:', function() {
     it('Party join from two clients', function(done) {
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", test_party.name, test_party.side, test_party.type);
         });
 
@@ -240,7 +240,7 @@ describe('Server:', function() {
             else done(new Error("Wrong status code"));
         });
 
-        req.on('error', function(error) {
+        req.on('error', function() {
             done(new Error("Error happened during routing check"));
         });
 
@@ -257,7 +257,7 @@ describe('Server:', function() {
                 else done(new Error("Wrong status code"));
             });
 
-            req.on('error', function(error) {
+            req.on('error', function() {
                 done(new Error("Error happened during routing check"));
             });
 
@@ -266,16 +266,16 @@ describe('Server:', function() {
 
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", expect.name, expect.side, expect.type);
         });
 
-        client.on("create_ok", function(name, side) {
+        client.on("create_ok", function() {
             client.disconnect();
             setTimeout(checker, 50); //Give it a bit time to make test stable.
         });
 
-        client.on("create_fail", function(name, side) {
+        client.on("create_fail", function() {
             done(new Error("Create party failed"));
         });
 
@@ -292,7 +292,7 @@ describe('Server:', function() {
                 else done(new Error("second: Wrong status code"));
             });
 
-            req.on('error', function(error) {
+            req.on('error', function() {
                 done(new Error("second: Error happened during routing check"));
             });
 
@@ -307,7 +307,7 @@ describe('Server:', function() {
                 else done(new Error("first: Wrong status code"));
             });
 
-            req.on('error', function(error) {
+            req.on('error', function() {
                 done(new Error("first: Error happened during routing check"));
             });
 
@@ -316,15 +316,15 @@ describe('Server:', function() {
 
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", expect.name, expect.side, expect.type);
         });
 
-        client.on("create_ok", function(name, side) {
+        client.on("create_ok", function() {
             checker_first();
         });
 
-        client.on("create_fail", function(name, side) {
+        client.on("create_fail", function() {
             done(new Error("Create party failed"));
         });
     });
@@ -340,7 +340,7 @@ describe('Server:', function() {
                 else done(new Error("second: Wrong status code"));
             });
 
-            req.on('error', function(error) {
+            req.on('error', function() {
                 done(new Error("second: Error happened during routing check"));
             });
 
@@ -355,7 +355,7 @@ describe('Server:', function() {
                 else done(new Error("first: Wrong status code"));
             });
 
-            req.on('error', function(error) {
+            req.on('error', function() {
                 done(new Error("first: Error happened during routing check"));
             });
 
@@ -364,15 +364,15 @@ describe('Server:', function() {
 
         client = io.connect(URL);
 
-        client.on('connect', function(data) {
+        client.on('connect', function() {
             client.emit("party_create", expect.name, expect.side, expect.type);
         });
 
-        client.on("create_ok", function(name, side) {
+        client.on("create_ok", function() {
             checker_first();
         });
 
-        client.on("create_fail", function(name, side) {
+        client.on("create_fail", function() {
             done(new Error("Create party failed"));
         });
     });
@@ -406,10 +406,10 @@ describe('Party play suite:', function() {
         client = io.connect(URL);
 
         client.on('connect', function() {
-            client.on("create_ok", function(name, side) {
+            client.on("create_ok", function() {
                 client_op = io.connect(URL);
 
-                client_op.on('connect', function(data) {
+                client_op.on('connect', function() {
                     client_op.emit("party_join", test_join.name, test_join.side);
                 });
 
