@@ -272,7 +272,7 @@ describe('Server:', function() {
 
         client.on("create_ok", function(name, side) {
             client.disconnect();
-            checker();
+            setTimeout(checker, 50); //Give it a bit time to make test stable.
         });
 
         client.on("create_fail", function(name, side) {
