@@ -2,11 +2,16 @@
 const express = require('express');
 const app = express();
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
-
+const io = require('socket.io')(http, { pingTimeout: 20000 });
+const GAMES = new (require("./games.js"))();
 app.set('views', __dirname + '/../views');
 app.set('view engine', 'pug');
 app.use('/', express.static(__dirname + '/../static'));
+
+/* Logging
+ *
+ * Set process.env.LOG = "true" */
+const trace = require("./logger.js");
 
 /* There is only single page.
  *
@@ -41,9 +46,8 @@ app.get('*', function(req, res){
     res.status(404).render("404");
 });
 
-const GAMES = new (require("./games.js"))();
-
 io.on('connection', function(socket) {
+    trace("New user has connected(id=%s)", socket.id);
     /* Registers a new game.
      *
      * @param name Name of the party.
@@ -51,10 +55,13 @@ io.on('connection', function(socket) {
      * @param type The type of party: public, private, hotspot
      */
     socket.on("party_create", function(name, side, type) {
+        trace("User(id=%s) request party_create(name=%s, side=%s, type=%s", socket.id, name, side, type);
         if (GAMES.create(name, type, side, socket)) {
+            trace("User(id=%s) create_ok(name=%s, side=%s)", socket.id, name, side);
             socket.emit("create_ok", name, side);
         }
         else {
+            trace("User(id=%s) create_fail", socket.id);
             socket.emit("create_fail");
         }
     });
@@ -62,11 +69,14 @@ io.on('connection', function(socket) {
     /* Handles user's request to join game.
      */
     socket.on("party_join", function(name, side) {
+        trace("User(id=%s) request party_join(name=%s, side=%s)", socket.id, name, side);
         if (GAMES.add_user(name, side, socket)) {
+            trace("User(id=%s) join_ok", socket.id);
             socket.emit("join_ok");
             GAMES.get_another_socket(name, side).emit("joined");
         }
         else {
+            trace("User(id=%s) join_fail", socket.id);
             socket.emit("join_fail");
         }
     });
@@ -74,6 +84,7 @@ io.on('connection', function(socket) {
     socket.on("move", function(data) {
         var game_name = data.name;
         var move_side = GAMES.enum_side[data.side];
+        trace("User(id=%s) sends move(data=%j)", socket.id, data);
 
         GAMES.get_another_socket(game_name, move_side)
              .emit("move", {
@@ -87,6 +98,7 @@ io.on('connection', function(socket) {
     socket.on("check", function(data) {
         var game_name = data.name;
         var checked_by = GAMES.enum_side[data.side];
+        trace("User(id=%s) sends check(data=%j)", socket.id, data);
 
         GAMES.get_another_socket(game_name, checked_by)
              .emit("check");
@@ -95,6 +107,7 @@ io.on('connection', function(socket) {
     socket.on("uncheck", function(data) {
         var game_name = data.name;
         var checked_by = GAMES.enum_side[data.side];
+        trace("User(id=%s) sends uncheck(data=%j)", socket.id, data);
 
         GAMES.get_another_socket(game_name, checked_by)
              .emit("uncheck", data.old_pos);
@@ -103,22 +116,26 @@ io.on('connection', function(socket) {
     socket.on("pawn_promo", function(data) {
         var game_name = data.name;
         var checked_by = GAMES.enum_side[data.side];
+        trace("User(id=%s) sends pawn_promo(data=%j)", socket.id, data);
 
         GAMES.get_another_socket(game_name, checked_by)
              .emit("pawn_promo", data.new_piece, data.pos);
     });
 
     socket.on('sync_game', function(data) {
+        trace("User(id=%s) sends sync_game(data=%j)", socket.id, data);
         GAMES.get_another_socket(data.name, GAMES.enum_side[data.side])
              .emit("sync_game", data.sync_data);
     });
 
     socket.on("en_passant", function(data) {
+        trace("User(id=%s) sends en_passant(data=%j)", socket.id, data);
         GAMES.get_another_socket(data.name, GAMES.enum_side[data.side])
              .emit("en_passant", data.poor_pawn);
     });
 
     socket.on('disconnect', function() {
+        trace("User(id=%s) disconnects", socket.id);
         if (socket.chess_name === undefined) return;
 
         GAMES.user_discon(socket.chess_name, socket.chess_side);
@@ -127,6 +144,7 @@ io.on('connection', function(socket) {
         if (opponent_socket) opponent_socket.emit("opponent_disconnect");
         else {
             /* Terminate game as sync requires at least 1 online */
+            trace("User(id=%s) is last one. Delete game(%s)", socket.id, socket.chess_name);
             GAMES.del_game(socket.chess_name);
         }
     });
