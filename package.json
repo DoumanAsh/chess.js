@@ -25,6 +25,8 @@
   },
   "devDependencies": {
     "istanbul": "*",
-    "mocha": "*"
+    "jsdom": "^8.4.0",
+    "mocha": "*",
+    "mocha-jsdom": "^1.1.0"
   }
 }

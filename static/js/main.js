@@ -663,7 +663,7 @@ function ChessBoard() {
             for (var jdx = 0; jdx < new_rows.length; jdx++) {
                 if (new_rows[jdx] > 0 && new_rows[jdx] < 9) {
                     var new_move = new_col + new_rows[jdx];
-                    if (this[new_move] !== PLAYER_TEAM) result.push(new_move);
+                    if (this[new_move].team !== PLAYER_TEAM) result.push(new_move);
                 }
             }
         }
@@ -1033,8 +1033,6 @@ function reverse_board() {
 
     reverse_board_wrapper();
 }
-
-
 
 
 /**
