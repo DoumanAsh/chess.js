@@ -4,6 +4,7 @@ const fs = require('fs');
 const io = require('socket.io-client');
 const io_server = require('socket.io');
 const jsdom = require("mocha-jsdom");
+const path = require('path');
 
 describe('Client tests:', function() {
     /*
@@ -14,16 +15,26 @@ describe('Client tests:', function() {
 
     server.listen(80);
     */
+    var istanbul = require('istanbul');
+    var instrumenter = new istanbul.Instrumenter();
 
     jsdom({
         url: 'http://localhost',
-        src: [fs.readFileSync('node_modules/socket.io-client/socket.io.js', 'utf-8'), fs.readFileSync('static/js/main.js', 'utf-8')],
+        src: [
+            fs.readFileSync('node_modules/socket.io-client/socket.io.js', 'utf-8'),
+            instrumenter.instrumentSync(fs.readFileSync('static/js/main.js', 'utf-8'), path.normalize(__dirname + '/../static/js/main.js'))
+        ],
         html: fs.readFileSync('test/client.html', 'utf-8'),
         features: {
             ProcessExternalResources: false,
             MutationEvents: '2.0'
         }
     });
+
+    var get_coverage = function() {
+        var report_fd = fs.openSync("coverage/coverage1.json", "w");
+        fs.writeFileSync(report_fd, JSON.stringify(window.__coverage__));
+    };
 
     /* Initialize dummy socket object in document */
     var dummy_socket = function(func) {
@@ -76,7 +87,6 @@ describe('Client tests:', function() {
         reverse_board_checker();
         reverse_board_checker();
     });
-
 
     it('Board class basic', function() {
         dummy_socket();
@@ -247,5 +257,7 @@ describe('Client tests:', function() {
 
         window.BOARD[pos].piece = PIECES.pawn;
         window.BOARD[pos].div.className.replace(/white_rook/, "white_pawn");
+
+        get_coverage();
     });
 });

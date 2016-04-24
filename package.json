@@ -7,7 +7,7 @@
     "test": "mocha --use_strict",
     "start": "node --use-strict index.js",
     "lint": "jshint index.js src/ static/js || true",
-    "cov": " node --use_strict ./node_modules/istanbul/lib/cli.js cover --include-all-sources node_modules/mocha/bin/_mocha"
+    "cov": " node --use_strict ./node_modules/istanbul/lib/cli.js cover --include-all-sources node_modules/mocha/bin/_mocha && node --use_strict ./node_modules/istanbul/lib/cli.js report --root coverage lcov html text-summary"
   },
   "keywords": [
     "chess"
