@@ -515,11 +515,13 @@ describe('Party play suite:', function() {
         var data = {
             name: test_party.name,
             side: side_to_enum[test_party.side],
+            king_pos: "e6",
             old_pos: "e5"
         };
 
-        client_op.on("uncheck", function(old_pos) {
+        client_op.on("uncheck", function(king_pos, old_pos) {
             try {
+                assert(king_pos === data.king_pos);
                 assert(old_pos === data.old_pos);
                 done();
             }

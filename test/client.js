@@ -421,6 +421,306 @@ describe('Client tests:', function() {
         window.BOARD.en_passant_to = undefined;
     });
 
+    it('not_selected click event', function() {
+        //empty
+        var pos = "e5";
+        window.not_selected_click(pos);
+        assert.equal(window.BOARD.selected, undefined);
+
+        //enemy
+        pos = "e7";
+        window.not_selected_click(pos);
+        assert.equal(window.BOARD.selected, undefined);
+
+        //own
+        pos = "e2";
+        window.not_selected_click(pos);
+        assert.equal(window.BOARD.selected, "e2");
+        assert(window.BOARD[pos].div.className.search("selected") > 0);
+
+        window.BOARD.unselect();
+    });
+
+    it('selected click event', function() {
+        //Select king
+        var pos = "e1";
+        var old_pos = pos;
+        window.not_selected_click(pos);
+        assert.equal(window.BOARD.selected, pos);
+        assert(window.BOARD[pos].div.className.search("selected") > 0);
+
+        //Clicked on own piece
+        pos = "e2";
+        window.selected_click(pos);
+        assert.equal(window.BOARD.selected, pos);
+        assert(window.BOARD[pos].div.className.search("selected") > 0);
+        assert.equal(window.BOARD[old_pos].div.className.search("selected"), -1);
+
+        //Click on impossible move
+        old_pos = pos;
+        pos = "d3";
+        window.BOARD.selected_move_area = ["e3", "e4"];
+        window.selected_click(pos);
+        assert.equal(window.BOARD.selected, old_pos);
+        assert(window.BOARD[old_pos].div.className.search("selected") > 0);
+
+        //Click on possible move
+        pos = "e3";
+        window.selected_click(pos);
+        assert.equal(window.BOARD.selected, undefined);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+
+        assert.equal(window.BOARD[old_pos].div.className.search("selected"), -1);
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+
+        //Move back to restore things
+        old_pos = pos;
+        window.BOARD.selected = old_pos;
+        pos = "e2";
+        window.BOARD.selected_move_area = ["e2"];
+        window.selected_click(pos);
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+
+        window.BOARD.selected_move_area = [];
+    });
+
+    it('Movement', function() {
+        var is_socket_called = false;
+        var is_finished = false;
+        var old_pos = "e2";
+        var pos = "e4";
+
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "move");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, window.PLAYER_TEAM);
+            assert.equal(data.old_pos, old_pos);
+            assert.equal(data.new_pos, pos);
+            assert.equal(data.finished, is_finished);
+        });
+
+        //Move own pawn without finished
+        window.BOARD.selected = old_pos;
+        window.BOARD.move(pos, is_finished);
+        assert(is_socket_called, "Move event hasn't been sent");
+        assert.equal(window.BOARD.selected, undefined);
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("white_pawn"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert(window.BOARD[pos].div.className.search("white_pawn") > 0);
+
+        //Move enemy pawn
+        is_socket_called = false;
+        old_pos = "d7";
+        pos = "d5";
+
+        window.BOARD.enemy_move(old_pos, pos);
+        assert(!is_socket_called, "Move event MUST not be sent");
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("black_pawn"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.black);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert(window.BOARD[pos].div.className.search("black_pawn") > 0);
+
+        //Move own pawn with finished
+        old_pos = "e4";
+        pos = "e5";
+        is_finished = true;
+
+        //Move own pawn without finished
+        window.BOARD.selected = old_pos;
+        window.BOARD.move(pos, is_finished);
+        assert(is_socket_called, "Move event hasn't been sent");
+        assert.equal(window.BOARD.selected, undefined);
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("white_pawn"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert(window.BOARD[pos].div.className.search("white_pawn") > 0);
+
+        assert.equal(window.BOARD.turn, TEAM.black);
+
+        //Move enemy pawn for en passant
+        is_socket_called = false;
+        old_pos = "f7";
+        pos = "f5";
+
+        window.BOARD.enemy_move(old_pos, pos);
+        assert(!is_socket_called, "Move event MUST not be sent");
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("black_pawn"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.black);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert(window.BOARD[pos].div.className.search("black_pawn") > 0);
+
+        assert.equal(window.BOARD.en_passant_to, "f6");
+
+        //Move enemy pawn closer to king by ignoring rules
+        is_socket_called = false;
+        old_pos = "f5";
+        pos = "f3";
+
+        window.BOARD.enemy_move(old_pos, pos);
+        assert(!is_socket_called, "Move event MUST not be sent");
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("black_pawn"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.black);
+        assert.equal(window.BOARD[pos].piece, PIECES.pawn);
+        assert(window.BOARD[pos].div.className.search("black_pawn") > 0);
+
+        window.BOARD.turn_end();
+
+        //Check that king cannot move under threat
+        is_socket_called = false;
+        old_pos = "e1";
+        pos = "e2";
+        window.BOARD.selected = old_pos;
+        window.BOARD.move(pos, is_finished);
+        assert(!is_socket_called, "Move event MUST not be sent");
+        assert.equal(window.BOARD.selected, old_pos);
+        assert.equal(window.BOARD.king_pos, old_pos);
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.king);
+        assert.equal(window.BOARD[old_pos].team, TEAM.white);
+        assert(window.BOARD[old_pos].div.className.search("white_king") > 0);
+
+        assert.equal(window.BOARD[pos].team, TEAM.none);
+        assert.equal(window.BOARD[pos].piece, PIECES.none);
+        assert.equal(window.BOARD[pos].div.className.search("white_king"), -1);
+
+        window.BOARD.king_pos = "e1";
+
+        //Eat enemy pawn by queen
+        is_socket_called = false;
+        old_pos = "d1";
+        pos = "f3";
+        window.BOARD.selected = old_pos;
+        window.BOARD.move(pos, is_finished);
+        assert(is_socket_called, "Move event MUST be sent");
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("white_queen"), -1);
+
+        assert.equal(window.BOARD[pos].piece, PIECES.queen);
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert(window.BOARD[pos].div.className.search("white_queen") > 0);
+
+        //Eat enemy pawn by enemy queen Just for lulz.
+        is_socket_called = false;
+        old_pos = "d8";
+        pos = "e7";
+
+        window.BOARD.enemy_move(old_pos, pos);
+        assert(!is_socket_called, "Move event MUST not be sent");
+
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("black_queen"), -1);
+
+        assert.equal(window.BOARD[pos].team, TEAM.black);
+        assert.equal(window.BOARD[pos].piece, PIECES.queen);
+        assert(window.BOARD[pos].div.className.search("black_queen") > 0);
+
+        //also white king is supposed to be checked(sent by event).
+        window.BOARD.king_checked = true;
+
+        window.BOARD.turn_end();
+
+        //Cover white king by queen
+        var move_time = false;
+        is_socket_called = false;
+        old_pos = "f3";
+        pos = "e3";
+        dummy_socket(function(emit_event, data) {
+            if (move_time)
+            {
+                is_socket_called = true;
+                assert.equal(emit_event, "move");
+                assert.equal(data.name, "test");
+                assert.equal(data.side, window.PLAYER_TEAM);
+                assert.equal(data.old_pos, old_pos);
+                assert.equal(data.new_pos, pos);
+                assert.equal(data.finished, is_finished);
+            }
+            else {
+                move_time = true;
+                assert.equal(emit_event, "uncheck");
+                assert.equal(data.name, "test");
+                assert.equal(data.side, window.PLAYER_TEAM);
+                assert.equal(data.old_pos, old_pos);
+            }
+        });
+
+        window.BOARD.selected = old_pos;
+        window.BOARD.move(pos, is_finished);
+        assert(is_socket_called, "Move event MUST be sent");
+
+        assert(!window.BOARD.king_checked);
+        assert.equal(window.BOARD[old_pos].piece, PIECES.none);
+        assert.equal(window.BOARD[old_pos].team, TEAM.none);
+        assert.equal(window.BOARD[old_pos].div.className.search("white_queen"), -1);
+
+        assert.equal(window.BOARD[pos].piece, PIECES.queen);
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert(window.BOARD[pos].div.className.search("white_queen") > 0);
+
+    });
+
+    it('Read sync game', function() {
+        var is_socket_called = false;
+        var sync_data;
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "sync_game");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, TEAM.white);
+            sync_data = data.sync_data;
+        });
+
+        window.BOARD.sync_game(window.SOCKET);
+        assert(is_socket_called, "sync_game event hasn't been sent");
+
+        window.BOARD.reset();
+
+        window.BOARD.read_sync(sync_data);
+
+        var pos = "e7";
+        assert.equal(window.BOARD[pos].team, TEAM.black);
+        assert.equal(window.BOARD[pos].piece, PIECES.queen);
+        assert(window.BOARD[pos].div.className.search("black_queen") > 0);
+
+        pos = "e3";
+        assert.equal(window.BOARD[pos].piece, PIECES.queen);
+        assert.equal(window.BOARD[pos].team, TEAM.white);
+        assert(window.BOARD[pos].div.className.search("white_queen") > 0);
+    });
+
+    it('Catle king', function() {
+    });
+
     /* Should be last test
      * TODO: find a better way as window is not available in after() */
     it('Collect coverage', function() {

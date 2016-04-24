@@ -402,15 +402,21 @@ function ChessBoard() {
     };
 
     /**
-     * Uncheck own king.
+     * Uncheck divs.
+     */
+    this.uncheck = function(king_pos, old_pos) {
+        this[king_pos].div.className = this[king_pos].div.className.replace(/ checked/, "");
+        if (old_pos) this[old_pos].div.className = this[old_pos].div.className.replace(/ checked/, "");
+    };
+
+    /**
+     * Uncheck divs king.
      */
     this.me_uncheck = function(old_pos) {
         this.king_checked = false;
+        this.uncheck(this.king_pos, old_pos);
 
-        this[this.king_pos].div.className = this[this.king_pos].div.className.replace(/ checked/, "");
-        if (old_pos) this[old_pos].div.className = this[old_pos].div.className.replace(/ checked/, "");
-
-        SOCKET.emit("uncheck", { name: this.name, side: PLAYER_TEAM, old_pos: old_pos });
+        SOCKET.emit("uncheck", { name: this.name, side: PLAYER_TEAM, king_pos: this.king_pos, old_pos: old_pos });
     };
 
     /**
@@ -544,17 +550,18 @@ function ChessBoard() {
 
         if (old_pos.piece === PIECES.king) this.king_pos = to;
 
+        new_pos.team = old_pos.team;
+        new_pos.piece = old_pos.piece;
+        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
+
         if (this.is_me_check()) {
+            this.reset(to);
             if (old_pos.piece === PIECES.king) this.king_pos = this.selected;
             return;
         }
         else if (this.king_checked) {
             this.me_uncheck(this.selected);
         }
-
-        new_pos.team = old_pos.team;
-        new_pos.piece = old_pos.piece;
-        new_pos.div.className = new_pos.div.className.replace(/((black)|(white))_[^ ]+/, "") + " " + old_pos.div.className.split(/\s+/)[1];
 
         SOCKET.emit("move", {
             name: this.name,
@@ -614,11 +621,11 @@ function ChessBoard() {
         var eat_right = col_increase(col) + new_row;
 
         //Check if can eat
-        if (eat_left && (this.is_enemy_team(eat_left)) || this.is_en_passant(eat_left)) {
+        if (eat_left && (eat || this.is_enemy_team(eat_left) || this.is_en_passant(eat_left))) {
             result.push(eat_left);
         }
 
-        if (eat_right && this.is_enemy_team(eat_right) || this.is_en_passant(eat_right)) {
+        if (eat_right && (eat || this.is_enemy_team(eat_right) || this.is_en_passant(eat_right))) {
             result.push(eat_right);
         }
 
@@ -1175,8 +1182,8 @@ window.onload = function() {
         BOARD.me_checked();
     });
 
-    SOCKET.on("uncheck", function(old_pos) {
-        BOARD.me_uncheck(old_pos);
+    SOCKET.on("uncheck", function(king_pos, old_pos) {
+        BOARD.uncheck(king_pos, old_pos);
     });
 
     SOCKET.on("pawn_promo", function(piece, pos) {

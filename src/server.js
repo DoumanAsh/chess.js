@@ -110,7 +110,7 @@ io.on('connection', function(socket) {
         trace("User(id=%s) sends uncheck(data=%j)", socket.id, data);
 
         GAMES.get_another_socket(game_name, checked_by)
-             .emit("uncheck", data.old_pos);
+             .emit("uncheck", data.king_pos, data.old_pos);
     });
 
     socket.on("pawn_promo", function(data) {
