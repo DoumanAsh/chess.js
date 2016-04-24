@@ -31,11 +31,6 @@ describe('Client tests:', function() {
         }
     });
 
-    var get_coverage = function() {
-        if (!fs.existsSync("coverage")) fs.mkdirSync("coverage");
-        var report_fd = fs.openSync("coverage/coverage1.json", "w");
-        fs.writeFileSync(report_fd, JSON.stringify(window.__coverage__));
-    };
 
     /* Initialize dummy socket object in document */
     var dummy_socket = function(func) {
@@ -89,7 +84,7 @@ describe('Client tests:', function() {
         reverse_board_checker();
     });
 
-    it('Board class basic', function() {
+    it('Board class initialize', function() {
         dummy_socket();
 
         chess_init("test", "white");
@@ -113,45 +108,53 @@ describe('Client tests:', function() {
                 assert.equal(elem.div.className.search(/selected/), -1);
             }
         });
+    });
 
-        /* Select king that cannot move at the start */
+    it('King select unmoved', function() {
         window.BOARD.select(window.BOARD.king_pos);
         assert(window.BOARD[window.BOARD.king_pos].div.className.search(/selected/) > 0);
         assert.equal(window.BOARD.selected, window.BOARD.king_pos);
         assert.deepEqual(window.BOARD.selected_move_area, []);
+    });
 
-        /* Unselect */
+    it('King unselect', function() {
         window.BOARD.unselect();
         assert.equal(window.BOARD[window.BOARD.king_pos].div.className.search(/selected/), -1);
         assert.equal(window.BOARD.selected, undefined);
+    });
 
-        /* Check own king */
+    it('Check own king', function() {
         window.BOARD.me_checked();
         assert(window.BOARD.king_checked);
         assert(window.BOARD[window.BOARD.king_pos].div.className.search(/checked/) > 0);
+    });
 
-        /* Uncheck own king */
+    it('Uncheck own king', function() {
+        var pos = "e5";
         dummy_socket(function(emit_event, emit_data) {
             assert.equal(emit_event, "uncheck");
             assert.equal(emit_data.name, "test");
             assert.equal(emit_data.side, TEAM.white);
-            assert.equal(emit_data.old_pos, undefined);
+            assert.equal(emit_data.old_pos, pos);
         });
 
-        window.BOARD.me_uncheck();
+        window.BOARD[pos].div.className += " checked";
+        window.BOARD.me_uncheck(pos);
         assert(!window.BOARD.king_checked);
+        assert.equal(window.BOARD[pos].div.className.search(/checked/), -1);
         assert.equal(window.BOARD[window.BOARD.king_pos].div.className.search(/checked/), -1);
 
-        dummy_socket();
+    });
 
-        /* Set board element with data */
+    it('Set board element with data', function() {
         var pos = "e5";
+        var old_king_pos = window.BOARD.king_pos;
         [TEAM.black, TEAM.white].forEach(function(team) {
             var team_str;
             if (team === TEAM.black) team_str = "black";
             else team_str = "white";
 
-            [PIECES.pawn, PIECES.rook, PIECES.bishop, PIECES.knight, PIECES.queen].forEach(function(piece) {
+            [PIECES.pawn, PIECES.rook, PIECES.bishop, PIECES.knight, PIECES.queen, PIECES.king].forEach(function(piece) {
                 var expected_name = team_str;
                 switch (piece) {
                     case PIECES.pawn:
@@ -168,6 +171,9 @@ describe('Client tests:', function() {
                         break;
                     case PIECES.queen:
                         expected_name += "_queen";
+                        break;
+                    case PIECES.king:
+                        expected_name += "_king";
                         break;
                 }
 
@@ -189,24 +195,28 @@ describe('Client tests:', function() {
             });
         });
 
-        /* Is enemy team checker */
+        window.BOARD.king_pos = old_king_pos;
+    });
+
+    it('Enemy team checker', function() {
         assert(!window.BOARD.is_enemy_team(window.BOARD.king_pos));
         assert(window.BOARD.is_enemy_team("e7"));
+    });
 
-        /* Select pawn */
-        pos = "e2";
+    it('Select and unselect pawn', function() {
+        var pos = "e2";
         window.BOARD.select(pos);
         assert(window.BOARD[pos].div.className.search(/selected/) > 0);
         assert.equal(window.BOARD.selected, pos);
         assert.deepEqual(window.BOARD.selected_move_area, ["e3", "e4"]);
 
-        /* Unselect */
         window.BOARD.unselect();
         assert.equal(window.BOARD[pos].div.className.search(/selected/), -1);
         assert.equal(window.BOARD.selected, undefined);
+    });
 
-        /* Select knight */
-        pos = "b1";
+    it('Select and unselect knight', function() {
+        var pos = "b1";
         window.BOARD.select(pos);
         assert(window.BOARD[pos].div.className.search(/selected/) > 0);
         assert.equal(window.BOARD.selected, pos);
@@ -216,18 +226,20 @@ describe('Client tests:', function() {
         window.BOARD.unselect();
         assert.equal(window.BOARD[pos].div.className.search(/selected/), -1);
         assert.equal(window.BOARD.selected, undefined);
+    });
 
-        /* Is own king checked */
+    it('Is own king checked', function() {
         assert(!window.BOARD.is_me_check());
         /* Replace own queen to be checked */
-        pos = "d1";
+        var pos = "d1";
         window.BOARD[pos].team = TEAM.black;
         assert(window.BOARD.is_me_check());
 
         window.BOARD[pos].team = TEAM.white;
+    });
 
-        /* Is enemy king checked */
-        pos = "d2";
+    it('Is enemy king checked', function() {
+        var pos = "d2";
         dummy_socket(function() {
             assert(false, "Enemy king is not supposed to be checked");
         });
@@ -248,9 +260,10 @@ describe('Client tests:', function() {
         assert(is_socket_called, "Event check is not sent");
 
         window.BOARD[pos].team = TEAM.black;
+    });
 
-        /* Check pawn promo */
-        pos = "d2";
+    it('Pawn promo', function() {
+        var pos = "d2";
         var new_piece = PIECES.rook;
         window.BOARD.pawn_promo(new_piece, pos);
         assert.equal(window.BOARD[pos].piece, PIECES.rook);
@@ -258,7 +271,161 @@ describe('Client tests:', function() {
 
         window.BOARD[pos].piece = PIECES.pawn;
         window.BOARD[pos].div.className.replace(/white_rook/, "white_pawn");
+    });
 
-        get_coverage();
+    it('Turn end', function() {
+        window.BOARD.turn_end();
+        assert.equal(window.BOARD.turn, TEAM.black);
+        assert.equal(document.getElementById("menu_turn").innerHTML, "BLACK");
+        window.BOARD.turn_end();
+        assert.equal(window.BOARD.turn, TEAM.white);
+        assert.equal(document.getElementById("menu_turn").innerHTML, "WHITE");
+    });
+
+    it('Sync game', function() {
+        var is_socket_called = false;
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "sync_game");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, TEAM.white);
+            assert.equal(data.sync_data.turn, window.BOARD.turn);
+
+            var figure_map = {
+                a: PIECES.rook,
+                b: PIECES.knight,
+                c: PIECES.bishop,
+                d: PIECES.queen,
+                e: PIECES.king,
+                f: PIECES.bishop,
+                g: PIECES.knight,
+                h: PIECES.rook
+            };
+
+            ["a", "b", "c", "d", "e", "f", "g", "h"].forEach(function(col) {
+                //black
+                var col8 = col + 8;
+                var col7 = col + 7;
+                assert.equal(data.sync_data.board[col8].team, TEAM.black);
+                assert.equal(data.sync_data.board[col8].piece, figure_map[col]);
+                assert.equal(data.sync_data.board[col7].team, TEAM.black);
+                assert.equal(data.sync_data.board[col7].piece, PIECES.pawn);
+
+                //white
+                var col1 = col + 1;
+                var col2 = col + 2;
+                assert.equal(data.sync_data.board[col1].team, TEAM.white);
+                assert.equal(data.sync_data.board[col1].piece, figure_map[col]);
+                assert.equal(data.sync_data.board[col2].team, TEAM.white);
+                assert.equal(data.sync_data.board[col2].piece, PIECES.pawn);
+
+                //none
+                for (var idx = 3; idx < 6; idx++) {
+                    var elem = data.sync_data.board[col+idx];
+                    assert.equal(elem.team, TEAM.none);
+                    assert.equal(elem.piece, PIECES.none);
+                }
+            });
+        });
+
+        window.BOARD.sync_game(window.SOCKET);
+        assert(is_socket_called, "sync_game event hasn't been sent");
+    });
+
+    it('Pawn promo white', function() {
+        var pos = "h8";
+        var is_socket_called = false;
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "pawn_promo");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, TEAM.white);
+            assert.equal(data.new_piece, PIECES.queen); //default
+            assert.equal(data.pos, pos);
+        });
+
+        window.BOARD[pos].team = TEAM.white;
+        window.BOARD.is_pawn_promo(window.BOARD[pos]);
+        assert(is_socket_called, "pawn_promo event hasn't been sent");
+        assert(window.BOARD[pos].div.className.search(/queen/) > 0);
+
+        window.BOARD[pos].team = TEAM.black;
+        window.BOARD[pos].piece = PIECES.rook;
+    });
+
+    it('Pawn promo black', function() {
+        var pos = "h1";
+        var is_socket_called = false;
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "pawn_promo");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, TEAM.white);
+            assert.equal(data.new_piece, PIECES.queen); //default
+            assert.equal(data.pos, pos);
+        });
+
+        window.BOARD[pos].team = TEAM.black;
+        window.BOARD.is_pawn_promo(window.BOARD[pos]);
+        assert(is_socket_called, "pawn_promo event hasn't been sent");
+        assert(window.BOARD[pos].div.className.search(/queen/) > 0);
+
+        window.BOARD[pos].team = TEAM.white;
+        window.BOARD[pos].piece = PIECES.rook;
+    });
+
+    it('is_move_en_passant() check', function() {
+        var pos = "c6";
+        var is_socket_called = false;
+        window.BOARD.en_passant_to = pos;
+
+        dummy_socket(function(emit_event, data) {
+            is_socket_called = true;
+            assert.equal(emit_event, "en_passant");
+            assert.equal(data.name, "test");
+            assert.equal(data.side, TEAM.white);
+            assert.equal(data.poor_pawn, "c5");
+        });
+
+        window.BOARD["c5"].team = TEAM.black;
+        window.BOARD["c5"].piece = TEAM.pawn;
+        window.BOARD["c5"].div.className += " black_pawn";
+
+        assert(window.BOARD.is_en_passant(pos));
+        window.BOARD.is_move_en_passant(pos);
+        assert.equal(window.BOARD.en_passant_to, undefined);
+        assert.equal(window.BOARD["c5"].team, TEAM.none);
+        assert.equal(window.BOARD["c5"].piece, PIECES.none);
+        assert.equal(window.BOARD["c5"].div.className.search("black_pawn"), -1);
+        assert(is_socket_called, "en_passant event hasn't been sent");
+
+        is_socket_called = false;
+
+        dummy_socket(function() {
+            is_socket_called = true;
+        });
+
+        window.BOARD.is_move_en_passant(pos);
+        assert(!is_socket_called, "en_passant event MUST not be sent");
+    });
+
+    it('en_passant() check', function() {
+        window.PLAYER_TEAM = TEAM.black;
+        window.BOARD.en_passant("c2", "c4");
+        assert.equal(window.BOARD.en_passant_to, "c3");
+        window.BOARD.en_passant_to = undefined;
+
+        window.PLAYER_TEAM = TEAM.white;
+        window.BOARD.en_passant("c7", "c5");
+        assert.equal(window.BOARD.en_passant_to, "c6");
+        window.BOARD.en_passant_to = undefined;
+    });
+
+    /* Should be last test
+     * TODO: find a better way as window is not available in after() */
+    it('Collect coverage', function() {
+        if (!fs.existsSync("coverage")) fs.mkdirSync("coverage");
+        var report_fd = fs.openSync("coverage/coverage1.json", "w");
+        fs.writeFileSync(report_fd, JSON.stringify(window.__coverage__));
     });
 });
