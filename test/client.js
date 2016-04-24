@@ -32,6 +32,7 @@ describe('Client tests:', function() {
     });
 
     var get_coverage = function() {
+        if (!fs.existsSync("coverage")) fs.mkdirSync("coverage");
         var report_fd = fs.openSync("coverage/coverage1.json", "w");
         fs.writeFileSync(report_fd, JSON.stringify(window.__coverage__));
     };
