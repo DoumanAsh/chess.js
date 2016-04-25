@@ -82,6 +82,23 @@ describe('Client tests:', function() {
 
         reverse_board_checker();
         reverse_board_checker();
+
+        var old_get_rand_int = window.get_rand_int;
+        /* check get_random_side()
+         * black <= 5 || white > 5*/
+        window.get_rand_int = function() {
+            return 1;
+        }
+
+        assert.equal(get_random_side(), "black");
+
+        window.get_rand_int = function() {
+            return 6;
+        }
+
+        assert.equal(get_random_side(), "white");
+
+        window.get_rand_int = old_get_rand_int;
     });
 
     it('Board class initialize', function() {
@@ -419,6 +436,52 @@ describe('Client tests:', function() {
         window.BOARD.en_passant("c7", "c5");
         assert.equal(window.BOARD.en_passant_to, "c6");
         window.BOARD.en_passant_to = undefined;
+    });
+
+    it('click event', function() {
+        var old_not_selected_click = window.not_selected_click;
+        var old_selected_click = window.selected_click;
+        var old_player_team = window.PLAYER_TEAM;
+        var old_board_selected = window.BOARD.selected;
+
+        var is_selected_click = false;
+        var is_not_selected_click = false;
+
+        window.not_selected_click = function() {
+            is_not_selected_click = true;
+        };
+
+        window.selected_click = function() {
+            is_selected_click = true;
+        };
+
+        /* Non-player turn */
+        window.PLAYER_TEAM = TEAM.black;
+        window.click();
+
+        assert(!is_not_selected_click);
+        assert(!is_selected_click);
+
+        /* Player turn non-selected */
+        window.PLAYER_TEAM = old_player_team;
+        window.click();
+
+        assert(is_not_selected_click);
+        assert(!is_selected_click);
+
+        /* Player turn selected */
+        is_not_selected_click = false;
+        window.BOARD.selected = true;
+        window.click();
+
+        assert(!is_not_selected_click);
+        assert(is_selected_click);
+
+        /* Post-condition */
+        window.not_selected_click = old_not_selected_click;
+        window.selected_click = old_selected_click;
+        window.PLAYER_TEAM = old_player_team;
+        window.BOARD.selected = old_board_selected;
     });
 
     it('not_selected click event', function() {
@@ -914,6 +977,58 @@ describe('Client tests:', function() {
         pos = "h5";
         check_avail_area(pos, data, ["h4", "h6", "h4", "g4", "g5"]);
 
+    });
+
+    it('Side determ', function() {
+        var old_player_team = window.PLAYER_TEAM;
+        var old_king_pos = window.BOARD.king_pos;
+        var old_switch_side = window.switch_side;
+
+        var is_switch_side_call = false;
+
+        window.switch_side = function() {
+            is_switch_side_call = true;
+        };
+
+        /* switch to black */
+        window.side_determ("black");
+        assert.equal(window.PLAYER_TEAM, TEAM.black);
+        assert.equal(window.BOARD.king_pos, "e8");
+        assert(is_switch_side_call);
+
+        is_switch_side_call = false;
+        /* switch to white */
+        window.side_determ("white");
+        assert.equal(window.PLAYER_TEAM, TEAM.white);
+        assert.equal(window.BOARD.king_pos, "e1");
+        assert(is_switch_side_call);
+
+        window.PLAYER_TEAM = old_player_team;
+        window.BOARD.king_pos = old_king_pos;
+        window.switch_side = old_switch_side;
+    });
+
+    it('Switch side', function() {
+        var old_reverse_board = window.reverse_board;
+        var old_player_team = window.PLAYER_TEAM;
+
+        window.reverse_board = function() {
+        };
+
+        /* switch side to black */
+        window.PLAYER_TEAM = TEAM.black;
+        window.switch_side();
+        assert.equal(document.getElementById("menu_side").value, "Black");
+        assert.equal(document.getElementById("menu_team").innerHTML, "BLACK");
+
+        /* switch side to white */
+        window.PLAYER_TEAM = TEAM.white;
+        window.switch_side();
+        assert.equal(document.getElementById("menu_side").value, "White");
+        assert.equal(document.getElementById("menu_team").innerHTML, "WHITE");
+
+        window.reverse_board = old_reverse_board;
+        window.PLAYER_TEAM = old_player_team;
     });
 
     /* Should be last test
