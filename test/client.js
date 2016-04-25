@@ -718,7 +718,202 @@ describe('Client tests:', function() {
         assert(window.BOARD[pos].div.className.search("white_queen") > 0);
     });
 
-    it('Catle king', function() {
+    /**
+     * @brief Sets element to position and checks that available move area is correct.
+     *
+     * Correct is not of own team.
+     * Resets backs element in position.
+     *
+     * @return avail_area Array of possible movements under check.
+     */
+    var check_avail_area = function(position, data, expected_array, is_eat) {
+        var old_data = {
+            piece: window.BOARD[position].piece,
+            team: window.BOARD[position].team
+        };
+        var old_king_pos = window.BOARD.king_pos;
+        window.BOARD.reset(position);
+        window.BOARD.set_board_elem(position, data);
+
+        var avail_area = window.BOARD.get_avail_area(position, is_eat);
+
+        avail_area.forEach(function(pos) {
+            assert.notEqual(window.BOARD[pos].team, data.team);
+        });
+
+        if (expected_array) {
+            assert.equal(avail_area.length, expected_array.length);
+            if (expected_array.length === 0) {
+                assert.deepEqual(avail_area.sort(), expected_array.sort());
+            }
+        }
+
+        window.BOARD.reset(position);
+        window.BOARD.set_board_elem(position, old_data);
+        window.BOARD.king_pos = old_king_pos;
+
+        return avail_area;
+    };
+
+    /* Depends on board state after previous tests intentionally */
+    it('get_avail_area pawn', function() {
+        var pos = "e5";
+        var data = {
+            piece: PIECES.pawn,
+            team: TEAM.white
+        };
+
+        /* check normal pawn move */
+        check_avail_area(pos, data, ["e6"]);
+
+        /* check move area with special flag eat
+         * i.e. expect threat moves only */
+        check_avail_area(pos, data, ["d6", "f6"], true);
+
+        /* Check that no moves are available if own piece is standing on e3
+         * i.e. including no special move to e4 */
+        pos = "e2";
+        check_avail_area(pos, data, []);
+
+        /* Remove figure from e3 to check that special move is available */
+        var old_team = window.BOARD["e3"].team;
+        window.BOARD["e3"].team = TEAM.none;
+
+        check_avail_area(pos, data, ["e3", "e4"]);
+
+        /* Set figure on e4 and check that only e3 move is available */
+        window.BOARD["e4"].team = old_team;
+
+        check_avail_area(pos, data, ["e3"]);
+
+        /* reset changes */
+        window.BOARD["e4"].team = TEAM.none;
+        window.BOARD["e3"].team = old_team;
+    });
+
+    it('get_avail_area knight', function() {
+        var pos = "e5";
+        var data = {
+            piece: PIECES.knight,
+            team: TEAM.white
+        };
+
+        /* check normal move */
+        check_avail_area(pos, data, ["d7", "d3", "c4", "c6", "g4", "g6", "f7", "f3"]);
+
+        /* Add own pieces to c4 and f7 */
+        var old_team_c4 = window.BOARD["c4"].team;
+        var old_team_f7 = window.BOARD["f7"].team;
+        window.BOARD["c4"].team = TEAM.white;
+        window.BOARD["f7"].team = TEAM.white;
+
+        check_avail_area(pos, data, ["d7", "d3", "c6", "g4", "g6", "f3"]);
+
+        window.BOARD["c4"].team = old_team_c4;
+        window.BOARD["f7"].team = old_team_f7;
+
+        /* Check move area at the edges of board with own pieces*/
+        pos = "a1";
+
+        check_avail_area(pos, data, ["b3"]);
+
+        /* Check move area at the edges of board with enemy pieces*/
+        pos = "a8";
+
+        check_avail_area(pos, data, ["b6", "c7"]);
+    });
+
+    it('get_avail_area bishop', function() {
+        var pos = "e5";
+        var data = {
+            piece: PIECES.bishop,
+            team: TEAM.white
+        };
+
+        /* check normal move */
+        check_avail_area(pos, data, ["d4", "c3", "d6", "c7", "f6", "g7", "f4", "g3"]);
+
+        /* check at the edge of own side */
+        pos = "a1";
+        check_avail_area(pos, data, []);
+
+        /* check at the edge of own side */
+        pos = "a8";
+        check_avail_area(pos, data, ["b7"]);
+
+        /* check at the edge in the middle */
+        pos = "a5";
+        check_avail_area(pos, data, ["b6", "c7", "b4", "c3"]);
+    });
+
+    it('get_avail_area rook', function() {
+        var pos = "e5";
+        var data = {
+            piece: PIECES.rook,
+            team: TEAM.white
+        };
+
+        /* check normal move */
+        check_avail_area(pos, data, ["d5", "f5", "g5", "h5", "e4", "e6", "e7"]);
+
+        /* check at the enemy edge */
+        pos = "h8";
+        check_avail_area(pos, data, ["h7", "g8"]);
+
+        /* check at the own edge */
+        pos = "h1";
+        check_avail_area(pos, data, []);
+
+        /* check at the middle edge */
+        pos = "h5";
+        check_avail_area(pos, data, ["g5", "f5", "h4", "h3", "h6", "h7"]);
+    });
+
+    it('get_avail_area queen', function() {
+        var pos = "e5";
+        var data = {
+            piece: PIECES.queen,
+            team: TEAM.white
+        };
+
+        /* check normal move */
+        check_avail_area(pos, data, ["d4", "c3", "d6", "c7", "f6", "g7", "f4", "g3", "d5", "f5", "g5", "h5", "e4", "e6", "e7"]);
+
+        /* check at the edge of own team */
+        pos = "a1";
+        check_avail_area(pos, data, []);
+
+        /* check at the edge of enemy team */
+        pos = "a8";
+        check_avail_area(pos, data, ["b8", "a7", "b7"]);
+
+        /* check at the middle edge */
+        pos = "h5";
+        check_avail_area(pos, data, ["g5", "f5", "h4", "h3", "g4", "f3", "e2", "d1", "h6", "h7", "g6", "f7", "e8"]);
+    });
+
+    it('get_avail_area king', function() {
+        var pos = "b5";
+        var data = {
+            piece: PIECES.king,
+            team: TEAM.white
+        };
+
+        /* check normal move */
+        check_avail_area(pos, data, ["a5", "b4", "a4", "c4", "c5", "c6", "b6", "a6"]);
+
+        /* check at the edge of own team */
+        pos = "a1";
+        check_avail_area(pos, data, []);
+
+        /* check at the edge of enemy team */
+        pos = "a8";
+        check_avail_area(pos, data, ["b8", "b7", "a7"]);
+
+        /* check at the middle edge */
+        pos = "h5";
+        check_avail_area(pos, data, ["h4", "h6", "h4", "g4", "g5"]);
+
     });
 
     /* Should be last test
