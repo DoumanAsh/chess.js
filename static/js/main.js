@@ -470,7 +470,7 @@ function ChessBoard() {
                 return [];
             };
             this.is_castling_lost = function() {
-                return undefined;
+                return true;
             };
         }
     };

@@ -127,6 +127,155 @@ describe('Client tests:', function() {
         });
     });
 
+    it('is_castling_lost', function() {
+        var old_get_avail_castling_king = window.BOARD.get_avail_castling_king;
+        var old_is_castling_lost = window.BOARD.is_castling_lost;
+        var old_move = window.BOARD.move;
+        var old_king_moved = window.BOARD.king_moved;
+        var old_king_pos = window.BOARD.king_pos;
+        var old_selected = window.BOARD.selected;
+        var old_h_rook_moved = window.BOARD.h_rook_moved;
+        var old_a_rook_moved = window.BOARD.a_rook_moved;
+
+        var pos = window.BOARD["e4"];
+        var old_pos_piece = pos.piece;
+        var old_div_id = pos.div.id;
+        var is_move_called = false;
+        var expected_move = undefined;
+        var expected_finished = undefined;
+
+        window.BOARD.move = function(move_to, finished) {
+            is_move_called = true;
+            assert.equal(move_to, expected_move);
+            assert.strictEqual(finished, expected_finished);
+        };
+
+
+        /* Check king already moved */
+        window.BOARD.king_moved = true;
+        window.BOARD.is_castling_lost(pos);
+        assert.equal(window.BOARD.get_avail_castling_king().length, 0);
+        assert(window.BOARD.is_castling_lost());
+        assert(!is_move_called);
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+
+
+        /* Check for rook move */
+        pos.piece = PIECES.rook;
+        window.BOARD.king_moved = false;
+
+        window.BOARD.selected = "h1";
+        window.BOARD.is_castling_lost(pos);
+        assert(!window.BOARD.king_moved);
+        assert(window.BOARD.h_rook_moved);
+        assert(!window.BOARD.a_rook_moved);
+
+        window.BOARD.selected = "a1";
+        window.BOARD.is_castling_lost(pos);
+        assert(window.BOARD.king_moved);
+        assert(window.BOARD.h_rook_moved);
+        assert(window.BOARD.a_rook_moved);
+        assert.equal(window.BOARD.get_avail_castling_king().length, 0);
+        assert(window.BOARD.is_castling_lost());
+        assert(!is_move_called);
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.king_moved = false;
+        window.BOARD.h_rook_moved = false;
+        window.BOARD.a_rook_moved = false;
+
+
+        /* Check for king move
+         * castling cannot happen because on e4 */
+        pos.piece = PIECES.king;
+        window.BOARD.is_castling_lost(pos);
+        assert(window.BOARD.king_moved);
+        assert(!window.BOARD.h_rook_moved);
+        assert(!window.BOARD.a_rook_moved);
+        assert(!is_move_called);
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.king_moved = false;
+
+        /* Check for king move
+         * castling happen because on c1 */
+        pos.div.id = "c1";
+        window.BOARD.king_pos = "c1"
+        expected_finished = false;
+        expected_move = "d1";
+        window.BOARD.is_castling_lost(pos);
+        assert(is_move_called);
+        assert(window.BOARD.king_moved);
+        assert(!window.BOARD.h_rook_moved);
+        assert(!window.BOARD.a_rook_moved);
+        assert.equal(window.BOARD.get_avail_castling_king().length, 0);
+        assert(window.BOARD.is_castling_lost());
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.king_moved = false;
+        is_move_called = false;
+
+        /* Check for king move
+         * castling happen because on c1 */
+        pos.div.id = "g1";
+        window.BOARD.king_pos = "g1"
+        expected_finished = false;
+        expected_move = "f1";
+        window.BOARD.is_castling_lost(pos);
+        assert(is_move_called);
+        assert(window.BOARD.king_moved);
+        assert(!window.BOARD.h_rook_moved);
+        assert(!window.BOARD.a_rook_moved);
+        assert.equal(window.BOARD.get_avail_castling_king().length, 0);
+        assert(window.BOARD.is_castling_lost());
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.king_moved = false;
+        is_move_called = false;
+
+        /* Check for king move
+         * castling CANNOT happen because on e2 */
+        pos.div.id = "e1";
+        window.BOARD.king_pos = "e1"
+        expected_finished = false;
+        expected_move = "e2";
+        window.BOARD.is_castling_lost(pos);
+        assert(!is_move_called);
+        assert(window.BOARD.king_moved);
+        assert(!window.BOARD.h_rook_moved);
+        assert(!window.BOARD.a_rook_moved);
+        assert.equal(window.BOARD.get_avail_castling_king().length, 0);
+        assert(window.BOARD.is_castling_lost());
+
+        /* Restore */
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.king_moved = false;
+
+        /* Post condition */
+        pos.piece = old_pos_piece;
+        pos.div.id = old_div_id;
+        window.BOARD.get_avail_castling_king = old_get_avail_castling_king;
+        window.BOARD.is_castling_lost = old_is_castling_lost;
+        window.BOARD.move = old_move;
+        window.BOARD.king_moved = old_king_moved;
+        window.BOARD.king_pos = old_king_pos;
+        window.BOARD.selected = old_selected;
+        window.BOARD.h_rook_moved = old_h_rook_moved;
+        window.BOARD.a_rook_moved = old_a_rook_moved;
+    });
+
     it('King select unmoved', function() {
         window.BOARD.select(window.BOARD.king_pos);
         assert(window.BOARD[window.BOARD.king_pos].div.className.search(/selected/) > 0);
